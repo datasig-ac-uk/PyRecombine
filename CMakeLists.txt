@@ -87,6 +87,9 @@ print(p.parent.parent)
 
     set(MKL_THREADING intel_thread)
     set(MKL_INTERFACE ilp64)
+    # If mkl-static is installed, we can use this.
+    # It isn't clear that it is best to do so though.
+    # set(MKL_LINK static)
     find_package(MKL CONFIG REQUIRED)
 endif ()
 

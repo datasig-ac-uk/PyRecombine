@@ -1,0 +1,71 @@
+name: Build Wheels
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+
+jobs:
+  build_sdist:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build sdist
+        run: |
+          python -m pip install build
+          python -m build --sdist .
+        env:
+          SETUPTOOLS_SCM_DEBUG: 1
+
+      - name: Check sdist
+        run: |
+          python -m pip install twine
+          twine check dist/*
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: ./dist/*
+
+
+  build_wheels:
+    name: Build wheel for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-2019
+          - macos-13 # Uses x64
+          - macos-14 # Uses Apple Silicon
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Build and test
+        uses: pypa/cibuildwheel@v2.21.3
+        env:
+          MACOSX_DEPLOYMENT_TARGET: 11.0.0
+          GITHUB_TOK: "${{ secrets.GITHUB_TOKEN }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl

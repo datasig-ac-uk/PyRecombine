@@ -26,8 +26,8 @@ def test_recombine_1(dimension, no_points):
 
 
     ## report
-    assert ((len(selected_points) > dimension + 1) or (normalised_error > 1e-13))
-
+    assert len(selected_points) <= dimension + 1
+    assert normalised_error <= 1e-13
 
 
 def test_recombine_2(dimension, no_points):
@@ -46,7 +46,8 @@ def test_recombine_2(dimension, no_points):
     normalised_error = norm(old_average - new_average) / (norm(old_average) + norm(new_average))
 
     ## report
-    assert ((len(selected_points) > dimension + 1) or (normalised_error > 1e-12))
+    assert len(selected_points) <= dimension + 1
+    assert normalised_error <= 1e-12
 
 def test_recombine_3():
     rng = np.random.default_rng(12345)
@@ -68,4 +69,5 @@ def test_recombine_3():
     normalised_error_in_cov = norm(old_cov - new_cov) / (norm(old_cov) + norm(new_cov))
 
 
-    assert ((normalised_error_in_mean > 1e-13) or (normalised_error_in_cov > 1e-13))
+    assert normalised_error_in_mean <= 1e-13
+    assert normalised_error_in_cov <= 1e-13

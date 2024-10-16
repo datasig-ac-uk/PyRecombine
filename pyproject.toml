@@ -46,7 +46,6 @@ build-backend = "scikit_build_core.build"
 cmake.version = ">=3.26"
 ninja.version = ">=1.11"
 wheel.packages = []
-cmake.verbose = true
 logging.level = "INFO"
 cmake.build-type = "Release"
 experimental=true
@@ -55,21 +54,37 @@ metadata.readme.provider = "scikit_build_core.metadata.fancy_pypi_readme"
 [tool.hatch.metadata.hooks.fancy-pypi-readme]
 content-type = "text/markdown"
 
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+path = "README.md"
 
+
+
+[tool.cibuildwheel]
+skip = [
+    "*win32",
+    "*-musl*",
+    "pp*",
+    "*linux_i686",
+    "*universal2",
+    "cp3{6,7,8}-*",
+    "cp3{9}-macos*"
+]
 
 test-requires = ["pytest"]
 test-command = [
     "pytest {project}/tests"
 ]
-before-all = "bash tools/ci/before-all-common.sh"
-environment= "CMAKE_TOOLCHAIN_FILE=./vcpkg/scripts/buildsystems/vcpkg.cmake VCPKG_OVERLAY_TRIPLETS=./tools/ci/triplets"
+
+
+
+
 
 [tool.cibuildwheel.windows]
 before-build = "pip install delvewheel"
 repair-wheel-command = "delvewheel repair -w {dest_dir} --ignore-in-wheel {wheel}"
 
 [tool.cibuildwheel.linux]
-repair-wheel-command = "auditwheel show {wheel} && auditwheel repair -w {dest_dir} {wheel}"
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --exclude libiomp5.so --exclude libmkl_core.so.2 --exclude libmkl_intel_ilp64.so.2 --exclude libmkl_intel_thread.so.2"
 
 [tool.cibuildwheel.macos]
 repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} --ignore-missing-dependencies -w {dest_dir} -v {wheel}"

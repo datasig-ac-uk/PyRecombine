@@ -34,14 +34,18 @@ def _locate_file(module: str, name: str) -> _Path:
     return file
 
 if platform.system() == "Linux":
+    import ctypes as _ctypes
     from ctypes import CDLL as _CDLL
 
-    try:
-        _CDLL(str(_locate_file("intel_openmp", "libiomp5.so")))
-        _CDLL(str(_locate_file("mkl", "libmkl_intel_ilp64.so.2")))
-        _CDLL(str(_locate_file("mkl", "libmkl_core.so.2")))
-        _CDLL(str(_locate_file("mkl", "libmkl_intel_thread.so.2")))
+    # This is critical, the MKL libraries have complicated interdependencies
+    # https://stackoverflow.com/a/53343430/9225581
+    mode = os.RTLD_GLOBAL | os.RTLD_LAZY
 
+    try:
+        _IOMP = _CDLL(str(_locate_file("intel_openmp", "libiomp5.so")), mode=mode)
+        _MKL_CORE = _CDLL(str(_locate_file("mkl", "libmkl_core.so.2")), mode=mode)
+        _MKL_INTEL_THREAD = _CDLL(str(_locate_file("mkl", "libmkl_intel_thread.so.2")), mode=mode)
+        _MKL_ILP64 = _CDLL(str(_locate_file("mkl", "libmkl_intel_ilp64.so.2")), mode=mode)
 
     except _ilm.PackageNotFoundError as e:
         raise ImportError("Could not find the MKL libraries") from e

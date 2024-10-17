@@ -91,6 +91,7 @@ print(p.parent.parent)
     # If mkl-static is installed, we can use this.
     # It isn't clear that it is best to do so though.
     # set(MKL_LINK static)
+    set(MKL_LINK dynamic)
     find_package(MKL CONFIG REQUIRED)
 endif ()
 

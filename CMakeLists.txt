@@ -149,7 +149,7 @@ find_package(OpenMP REQUIRED COMPONENTS CXX)
 if (MSVC)
     set(OpenMP_CXX_FLAGS -openmp:experimental)
     set_target_properties(OpenMP::OpenMP_CXX PROPERTIES INTERFACE_COMPILE_OPTIONS "-openmp:experimental")
-    target_compile_options(_PyRecombine PRIVATE /fp:precise /nodefaultlib)
+    target_compile_options(_PyRecombine PRIVATE /fp:precise /NODEFAULTLIB)
 endif ()
 
 

@@ -54,6 +54,8 @@ elif platform.system() == "Windows":
         os.add_dll_directory(str(_locate_file("mkl", "mkl_core.2.dll").parent))
         os.add_dll_directory(str(_locate_file("mkl", "mkl_intel_thread.2.dll").parent))
         os.add_dll_directory(str(_locate_file("intel_openmp", "libiomp5md.dll").parent))
+
+        print("Added Library paths")
     except _ilm.PackageNotFoundError as e:
         raise ImportError("Could not find the MKL libraries") from e
 

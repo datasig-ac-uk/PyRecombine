@@ -139,6 +139,7 @@ if (NOT TARGET MKL::MKL)
 
     target_link_libraries(_PyRecombine PRIVATE BLAS::BLAS LAPACK::LAPACK)
 else ()
+    target_compile_definitions(_PyRecombine PRIVATE MKL=1)
     target_link_libraries(_PyRecombine PRIVATE MKL::MKL)
 endif ()
 

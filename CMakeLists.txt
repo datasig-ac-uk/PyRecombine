@@ -71,7 +71,7 @@ if (APPLE)
     # to make sure CMake can find the headers/library files so it can
     # be turned back on. Since this is usually Brew installed, this
     # is a sensible way to find it.
-    get_brew_prefix(_omp_prefix libomp)
+    get_brew_prefix(_omp_prefix libomp VERBOSE)
     if (_omp_prefix)
         message(STATUS "Setting OpenMP search dir to ${_omp_prefix}")
         list(PREPEND CMAKE_PREFIX_PATH "${_omp_prefix}")

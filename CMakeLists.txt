@@ -78,6 +78,7 @@ if (APPLE)
 
         foreach(LANG IN ITEMS C CXX)
             set(OpenMP_${LANG}_FLAGS "-Xclang -fopenmp" CACHE STRING "Flags to use to link OpenMP for ${LANG}")
+            set(OpenMP_${LANG}_LIBRARIES "${_opm_prefix}/lib/libomp.dylib")
         endforeach()
     endif ()
 endif ()

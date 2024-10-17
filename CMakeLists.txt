@@ -41,7 +41,7 @@ function(get_brew_prefix _out_var _package)
     endif ()
     message(DEBUG "Locating ${_package} brew installation prefix")
 
-    execute_process(COMMANDS ${_executable}
+    execute_process(COMMAND ${_executable}
             "--prefix" "${_package}"
             RESULT_VARIABLE _result
             OUTPUT_VARIABLE _out
@@ -66,12 +66,13 @@ if (APPLE)
     get_brew_prefix(_omp_prefix libomp)
     if (_omp_prefix)
         message(STATUS "Setting OpenMP search dir to ${_omp_prefix}")
+        list(PREPEND CMAKE_PREFIX_PATH "${_omp_prefix}")
         set(OpenMP_ROOT "${_omp_prefix}")
     endif ()
 endif ()
 
 message(STATUS "Target architecture ${CMAKE_SYSTEM_PROCESSOR}")
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86")
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64")
     execute_process(COMMAND "${Python_EXECUTABLE}" "-c" [=[
 import sysconfig
 from pathlib import Path

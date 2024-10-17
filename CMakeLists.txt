@@ -40,8 +40,12 @@ function(get_brew_prefix _out_var _package)
         set(_verbosity_flag "ECHO_OUTPUT_VARIABLE ECHO_ERROR_VARIABLE")
 
         execute_process(COMMAND ${_executable} info ${_package}
-                ECHO_OUTPUT_VARIABLE ECHO_ERROR_VARIABLE
+                RESULT_VARIABLE _result
+                ERROR_VARIABLE _err
         )
+        message(STATUS "${_package} info:\n${_result}\n${_err}")
+        unset(_result)
+        unsert(_err)
     endif ()
     message(DEBUG "Locating ${_package} brew installation prefix")
 

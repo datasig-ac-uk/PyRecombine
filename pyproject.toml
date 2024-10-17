@@ -81,7 +81,7 @@ test-command = [
 
 [tool.cibuildwheel.windows]
 before-build = "pip install delvewheel"
-repair-wheel-command = "delvewheel repair -w {dest_dir} --exclude \"mkl_core.2.dll,mkl_intel_thread.2.dll,libiomp5md.dll\" {wheel}"
+repair-wheel-command = "delvewheel repair -w {dest_dir} --exclude \"mkl_core.2.dll\" --exclude \"mkl_intel_thread.2.dll\" --exclude \"libiomp5md.dll\" {wheel}"
 
 [tool.cibuildwheel.linux]
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel} --exclude libiomp5.so --exclude libmkl_core.so.2 --exclude libmkl_intel_ilp64.so.2 --exclude libmkl_intel_thread.so.2"

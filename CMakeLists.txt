@@ -45,7 +45,7 @@ function(get_brew_prefix _out_var _package)
         )
         message(STATUS "${_package} info:\n${_result}\n${_err}")
         unset(_result)
-        unsert(_err)
+        unset(_err)
     endif ()
     message(DEBUG "Locating ${_package} brew installation prefix")
 

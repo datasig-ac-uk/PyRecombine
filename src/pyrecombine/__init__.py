@@ -6,6 +6,7 @@ import sysconfig
 
 from importlib import metadata as _ilm
 from pathlib import Path as _Path
+from ctypes import CDLL as _CDLL
 
 
 
@@ -34,8 +35,6 @@ def _locate_file(module: str, name: str) -> _Path:
     return file
 
 if platform.system() == "Linux":
-    import ctypes as _ctypes
-    from ctypes import CDLL as _CDLL
 
     # This is critical, the MKL libraries have complicated interdependencies
     # https://stackoverflow.com/a/53343430/9225581
@@ -54,6 +53,10 @@ elif platform.system() == "Windows":
     try:
         platdir_path = _locate_file("mkl", "mkl_core.2.dll")
         os.add_dll_directory(str(platdir_path.parent))
+        _MKL_CORE = _CDLL(str(platdir_path))
+        _IOMP = _CDLL(str(_locate_file("intel_openmp", "libiomp5md.dll")))
+        _MKL_INTEL_THREAD = _CDLL(str(_locate_file("mkl", "mkl_intel_thread.2.dll")))
+
     except _ilm.PackageNotFoundError as e:
         raise ImportError("Could not find the MKL libraries") from e
 

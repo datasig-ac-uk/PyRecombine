@@ -75,7 +75,11 @@ if (APPLE)
     if (_omp_prefix)
         message(STATUS "Setting OpenMP search dir to ${_omp_prefix}")
         list(PREPEND CMAKE_PREFIX_PATH "${_omp_prefix}")
-        set(OpenMP_ROOT "${_omp_prefix}")
+
+        foreach(LANG IN C CXX)
+            set(OpenMP_${LANG}_LIB_NAME omp CACHE STRING "Name of the library to link for OpenMP ${LANG} support")
+            set(OpenMP_${LANG}_FLAGS "-Xclang -fopenmp" CACHE STRING "Flags to use to link OpenMP for ${LANG}")
+        endforeach()
     endif ()
 endif ()
 

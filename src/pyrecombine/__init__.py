@@ -27,7 +27,7 @@ def _locate_file(module: str, name: str) -> _Path:
     files = [dist.locate_file(path).resolve() for path in dist.files if fnmatch.fnmatch(path.name, name)]
 
     if not files:
-        raise _ilm.PackageNotFoundError("Could not find specified file")
+        raise _ilm.PackageNotFoundError(f"Could not find {name} within {module}")
 
     file = files[0]
     assert file.exists()
@@ -51,7 +51,7 @@ if platform.system() == "Linux":
 
 elif platform.system() == "Windows":
     try:
-        for mod, name in [("mkl", "mkl_core.dll"), ("mkl", "mkl_intel_thread.dll"), ("intel_openmp", "libiomp5md.dll")]:
+        for mod, name in [("mkl", "mkl_core.2.dll"), ("mkl", "mkl_intel_thread.2.dll"), ("intel_openmp", "libiomp5md.dll")]:
             loc = _locate_file(mod, name)
             os.add_dll_directory(str(loc.parent))
             _CDLL(str(loc))

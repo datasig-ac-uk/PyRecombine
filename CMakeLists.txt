@@ -74,11 +74,11 @@ endif ()
 message(STATUS "Target architecture ${CMAKE_SYSTEM_PROCESSOR}")
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64")
     execute_process(COMMAND "${Python_EXECUTABLE}" "-c" [=[
-            from importlib import metadata as ilm
-            dist = ilm.distribution("mkl")
-            files = [dist.locate_file(path).resolve() for path in dist.files if path.name == "MKLConfig.cmake"]
-            assert files
-            print(files[0].parent)
+from importlib import metadata as ilm
+dist = ilm.distribution("mkl")
+files = [dist.locate_file(path).resolve() for path in dist.files if path.name == "MKLConfig.cmake"]
+assert files
+print(files[0].parent)
     ]=]
             RESULT_VARIABLE _result
             OUTPUT_VARIABLE _out

@@ -76,7 +76,7 @@ if (APPLE)
         message(STATUS "Setting OpenMP search dir to ${_omp_prefix}")
         list(PREPEND CMAKE_PREFIX_PATH "${_omp_prefix}")
 
-        find_library(_omp_lib NAMES omp libomp PATHS "${_omp_prefix}")
+        find_library(_omp_lib NAMES omp libomp HINTS "${_omp_prefix}")
         message(STATUS "Found libomp ${_omp_lib}")
 
         set(OpenMP_libomp_LIBRARY "${_omp_lib}" CACHE STRING "Location of OpenMP")

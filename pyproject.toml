@@ -72,7 +72,7 @@ skip = [
 
 test-requires = ["pytest"]
 test-command = [
-    "pytest -vvv {project}/tests"
+    "pytest -vvv -s {project}/tests"
 ]
 
 

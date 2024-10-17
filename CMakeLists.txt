@@ -85,7 +85,7 @@ print(p.parent.parent)
     message(STATUS "Adding ${_out}/cmake to search path")
     list(APPEND CMAKE_PREFIX_PATH "${_out}/cmake")
 
-
+    set(MKL_ARCH intel64)
     set(MKL_THREADING intel_thread)
     set(MKL_INTERFACE ilp64)
     # If mkl-static is installed, we can use this.

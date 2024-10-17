@@ -52,8 +52,8 @@ if platform.system() == "Linux":
 
 elif platform.system() == "Windows":
     try:
-        platdir_path = _locate_file("mkl", "libmkl_core.dll")
-        os.add_dll_directory(str(platdir_path))
+        platdir_path = _locate_file("mkl", "mkl_core.2.dll")
+        os.add_dll_directory(str(platdir_path.parent))
     except _ilm.PackageNotFoundError as e:
         raise ImportError("Could not find the MKL libraries") from e
 

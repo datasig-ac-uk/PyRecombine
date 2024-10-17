@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.29)
 project(PyRecombine)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -72,7 +72,7 @@ if (APPLE)
 endif ()
 
 message(STATUS "Target architecture ${CMAKE_SYSTEM_PROCESSOR}")
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64")
+if (NOT APPLE AND (CMAKE_SYSTEM_PROCESSOR MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "AMD64"))
     execute_process(COMMAND "${Python_EXECUTABLE}" "-c" [=[
 from importlib import metadata as ilm
 dist = ilm.distribution("mkl")

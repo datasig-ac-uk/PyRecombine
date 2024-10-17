@@ -77,7 +77,6 @@ if (APPLE)
         list(PREPEND CMAKE_PREFIX_PATH "${_omp_prefix}")
 
         foreach(LANG IN ITEMS C CXX)
-            set(OpenMP_${LANG}_LIB_NAMES omp CACHE STRING "Name of the library to link for OpenMP ${LANG} support")
             set(OpenMP_${LANG}_FLAGS "-Xclang -fopenmp" CACHE STRING "Flags to use to link OpenMP for ${LANG}")
         endforeach()
     endif ()

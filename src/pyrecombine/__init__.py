@@ -50,12 +50,12 @@ if platform.system() == "Linux":
         raise ImportError("Could not find the MKL libraries") from e
 
 elif platform.system() == "Windows":
+    import ctypes
     try:
-        mode = os.RTLD_GLOBAL | os.RTLD_LAZY
         platdir_path = _locate_file("mkl", "mkl_core.2.dll")
-        _MKL_CORE = _CDLL(str(platdir_path), mode=mode)
-        _IOMP = _CDLL(str(_locate_file("intel_openmp", "libiomp5md.dll")), mode=mode)
-        _MKL_INTEL_THREAD = _CDLL(str(_locate_file("mkl", "mkl_intel_thread.2.dll")), mode=mode)
+        _MKL_CORE = _CDLL(str(platdir_path), mode=ctypes.RTLD_GLOBAL)
+        _IOMP = _CDLL(str(_locate_file("intel_openmp", "libiomp5md.dll")), mode=ctypes.RTLD_GLOBAL)
+        _MKL_INTEL_THREAD = _CDLL(str(_locate_file("mkl", "mkl_intel_thread.2.dll")), mode=ctypes.RTLD_GLOBAL)
 
     except _ilm.PackageNotFoundError as e:
         raise ImportError("Could not find the MKL libraries") from e

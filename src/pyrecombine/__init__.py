@@ -42,16 +42,16 @@ if platform.system() == "Linux":
 
     try:
         _IOMP = _CDLL(str(_locate_file("intel_openmp", "libiomp5.so")), mode=mode)
-        _MKL_CORE = _CDLL(str(_locate_file("mkl", "libmkl_core.so.2")), mode=mode)
-        _MKL_INTEL_THREAD = _CDLL(str(_locate_file("mkl", "libmkl_intel_thread.so.2")), mode=mode)
-        _MKL_ILP64 = _CDLL(str(_locate_file("mkl", "libmkl_intel_ilp64.so.2")), mode=mode)
+        # _MKL_CORE = _CDLL(str(_locate_file("mkl", "libmkl_core.so.2")), mode=mode)
+        # _MKL_INTEL_THREAD = _CDLL(str(_locate_file("mkl", "libmkl_intel_thread.so.2")), mode=mode)
+        # _MKL_ILP64 = _CDLL(str(_locate_file("mkl", "libmkl_intel_ilp64.so.2")), mode=mode)
 
     except _ilm.PackageNotFoundError as e:
         raise ImportError("Could not find the MKL libraries") from e
 
 elif platform.system() == "Windows":
     try:
-        for mod, name in [("mkl", "mkl_core.2.dll"), ("mkl", "mkl_intel_thread.2.dll"), ("intel_openmp", "libiomp5md.dll")]:
+        for mod, name in [("intel_openmp", "libiomp5md.dll")]:
             loc = _locate_file(mod, name)
             os.add_dll_directory(str(loc.parent))
             _CDLL(str(loc))

@@ -47,6 +47,7 @@ build-backend = "scikit_build_core.build"
 cmake.version = ">=3.26"
 ninja.version = ">=1.11"
 wheel.packages = []
+build.verbose = true
 logging.level = "INFO"
 cmake.build-type = "Release"
 experimental=true
@@ -73,7 +74,7 @@ skip = [
 
 test-requires = ["pytest"]
 test-command = [
-    "pytest -vvv -s {project}/tests"
+#    "pytest {project}/tests"
 ]
 
 

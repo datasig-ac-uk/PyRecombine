@@ -49,9 +49,15 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - windows-2019
+          - windows-latest
           - macos-13 # Uses x64
           - macos-14 # Uses Apple Silicon
+        include:
+          - os: macos-13
+            deployment_target: "13.0"
+          - os: macos-14
+            deployment_target: "14.0"
+
 
     steps:
       - name: Checkout
@@ -62,7 +68,8 @@ jobs:
       - name: Build and test
         uses: pypa/cibuildwheel@v2.21.3
         env:
-          GITHUB_TOK: "${{ secrets.GITHUB_TOKEN }}"
+          MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment_target }}
+
 
 
       - uses: actions/upload-artifact@v4

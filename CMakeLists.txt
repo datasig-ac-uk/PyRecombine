@@ -180,11 +180,11 @@ find_package(OpenMP REQUIRED COMPONENTS CXX)
 if (MSVC)
     set(OpenMP_CXX_FLAGS -openmp:experimental)
     set_target_properties(OpenMP::OpenMP_CXX PROPERTIES INTERFACE_COMPILE_OPTIONS "-openmp:experimental")
-    target_compile_options(_PyRecombine PRIVATE /fp:precise)
+    target_compile_options(_PyRecombine PRIVATE /fp:precise /MD)
 endif ()
 
 
-target_link_Libraries(_PyRecombine PRIVATE Python::NumPy OpenMP::OpenMP_CXX)
+target_link_Libraries(_PyRecombine PRIVATE Python::NumPy OpenMP::OpenMP_CXX Threads::Threads)
 
 set(_rec_src ${CMAKE_CURRENT_LIST_DIR}/recombine/recombine)
 target_sources(_PyRecombine PRIVATE
@@ -210,6 +210,8 @@ SET_TARGET_PROPERTIES(_PyRecombine PROPERTIES
         LIBRARY_OUTPUT_NAME _recombine
         CXX_VISIBILITY_PRESET hidden
         VISIBILITY_INLINES_HIDDEN ON
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON
         C_STANDARD 11
         C_STANDARD_REQUIRED ON
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/src/pyrecombine
@@ -235,4 +237,21 @@ install(DIRECTORY src/pyrecombine
         DESTINATION .
         FILES_MATCHING
         PATTERN "*.py"
-        PATTERN "*.pyi")
+        PATTERN "*.pyi"
+)
+
+
+
+
+add_custom_target(pytest
+        COMMAND ${CMAKE_COMMAND} -E env "PYTHONPATH=${CMAKE_CURRENT_LIST_DIR}/src" "${Python_EXECUTABLE}" "-m" "pytest" "${CMAKE_CURRENT_LIST_DIR}/tests"
+        SOURCES tests/test_recombine.py
+        USES_TERMINAL
+
+)
+add_dependencies(pytest _PyRecombine)
+
+
+enable_testing()
+add_test(NAME PyTest
+        COMMAND ${CMAKE_COMMAND} -E env "PYTHONPATH=${CMAKE_CURRENT_LIST_DIR}/src" "${Python_EXECUTABLE}" "-m" "pytest" "${CMAKE_CURRENT_LIST_DIR}/tests")

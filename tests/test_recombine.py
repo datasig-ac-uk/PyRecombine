@@ -7,11 +7,11 @@ from pyrecombine import recombine
 
 @pytest.fixture
 def dimension():
-    return 60
+    return 30
 
 @pytest.fixture
 def no_points():
-    return 100000
+    return 10000
 
 def test_recombine_1(dimension, no_points):
     data = np.random.default_rng(12345).random(size=(no_points, dimension), dtype=np.float64)

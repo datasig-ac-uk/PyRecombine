@@ -54,7 +54,7 @@ jobs:
           - macos-14 # Uses Apple Silicon
         include:
           - os: macos-13
-            deployment_target: "11.0"
+            deployment_target: "13.0"
           - os: macos-14
             deployment_target: "14.0"
 

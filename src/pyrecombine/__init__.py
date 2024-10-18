@@ -6,8 +6,11 @@ import sysconfig
 
 from importlib import metadata as _ilm
 from pathlib import Path as _Path
+from ctypes import CDLL as _CDLL
 
 
+
+os.environ["OMP_NUM_THREADS"] = "2"
 
 def _locate_file(module: str, name: str) -> _Path:
     """
@@ -26,7 +29,7 @@ def _locate_file(module: str, name: str) -> _Path:
     files = [dist.locate_file(path).resolve() for path in dist.files if fnmatch.fnmatch(path.name, name)]
 
     if not files:
-        raise _ilm.PackageNotFoundError("Could not find specified file")
+        raise _ilm.PackageNotFoundError(f"Could not find {name} within {module}")
 
     file = files[0]
     assert file.exists()
@@ -34,8 +37,6 @@ def _locate_file(module: str, name: str) -> _Path:
     return file
 
 if platform.system() == "Linux":
-    import ctypes as _ctypes
-    from ctypes import CDLL as _CDLL
 
     # This is critical, the MKL libraries have complicated interdependencies
     # https://stackoverflow.com/a/53343430/9225581
@@ -43,17 +44,21 @@ if platform.system() == "Linux":
 
     try:
         _IOMP = _CDLL(str(_locate_file("intel_openmp", "libiomp5.so")), mode=mode)
-        _MKL_CORE = _CDLL(str(_locate_file("mkl", "libmkl_core.so.2")), mode=mode)
-        _MKL_INTEL_THREAD = _CDLL(str(_locate_file("mkl", "libmkl_intel_thread.so.2")), mode=mode)
-        _MKL_ILP64 = _CDLL(str(_locate_file("mkl", "libmkl_intel_ilp64.so.2")), mode=mode)
+        # _MKL_CORE = _CDLL(str(_locate_file("mkl", "libmkl_core.so.2")), mode=mode)
+        # _MKL_INTEL_THREAD = _CDLL(str(_locate_file("mkl", "libmkl_intel_thread.so.2")), mode=mode)
+        # _MKL_ILP64 = _CDLL(str(_locate_file("mkl", "libmkl_intel_ilp64.so.2")), mode=mode)
 
     except _ilm.PackageNotFoundError as e:
         raise ImportError("Could not find the MKL libraries") from e
 
 elif platform.system() == "Windows":
     try:
-        platdir_path = _locate_file("mkl", "libmkl_core.dll")
-        os.add_dll_directory(str(platdir_path))
+        for mod, name in [("intel_openmp", "libiomp5md.dll")]:
+            loc = _locate_file(mod, name)
+            os.add_dll_directory(str(loc.parent))
+            _CDLL(str(loc))
+            print(f"Loaded {mod}/{name} from {loc}")
+
     except _ilm.PackageNotFoundError as e:
         raise ImportError("Could not find the MKL libraries") from e
 

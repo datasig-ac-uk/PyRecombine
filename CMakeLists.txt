@@ -204,7 +204,6 @@ SET_TARGET_PROPERTIES(_PyRecombine PROPERTIES
 
 install(TARGETS
         _PyRecombine
-        RUNTIME_DEPENDENCIES
         RUNTIME DESTINATION pyrecombine
         LIBRARY
         DESTINATION pyrecombine

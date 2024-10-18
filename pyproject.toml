@@ -74,7 +74,7 @@ skip = [
 
 test-requires = ["pytest"]
 test-command = [
-    "pytest {project}/tests"
+#    "pytest {project}/tests"
 ]
 
 

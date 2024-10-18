@@ -200,4 +200,21 @@ install(DIRECTORY src/pyrecombine
         DESTINATION .
         FILES_MATCHING
         PATTERN "*.py"
-        PATTERN "*.pyi")
+        PATTERN "*.pyi"
+)
+
+
+
+
+add_custom_target(pytest
+        COMMAND ${CMAKE_COMMAND} -E env "PYTHONPATH=${CMAKE_CURRENT_LIST_DIR}/src" "${Python_EXECUTABLE}" "-m" "pytest" "${CMAKE_CURRENT_LIST_DIR}/tests"
+        SOURCES tests/test_recombine.py
+        USES_TERMINAL
+
+)
+add_dependencies(pytest _PyRecombine)
+
+
+enable_testing()
+add_test(NAME PyTest
+        COMMAND ${CMAKE_COMMAND} -E env "PYTHONPATH=${CMAKE_CURRENT_LIST_DIR}/src" "${Python_EXECUTABLE}" "-m" "pytest" "${CMAKE_CURRENT_LIST_DIR}/tests")

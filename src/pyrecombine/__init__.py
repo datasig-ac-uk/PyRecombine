@@ -56,7 +56,7 @@ elif platform.system() == "Windows":
         for mod, name in [("intel_openmp", "libiomp5md.dll")]:
             loc = _locate_file(mod, name)
             os.add_dll_directory(str(loc.parent))
-            _CDLL(str(loc))
+            # _CDLL(str(loc))
             print(f"Loaded {mod}/{name} from {loc}")
 
     except _ilm.PackageNotFoundError as e:

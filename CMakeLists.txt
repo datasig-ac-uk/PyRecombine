@@ -168,6 +168,9 @@ if (NOT TARGET MKL::MKL)
 else ()
     target_compile_definitions(_PyRecombine PRIVATE MKL=1)
     target_link_libraries(_PyRecombine PRIVATE MKL::MKL)
+    if (MSVC)
+        target_link_options(_PyRecombine PRIVATE "/nodefaultlib:vcomp")
+    endif()
 endif ()
 
 

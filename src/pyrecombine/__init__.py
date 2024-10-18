@@ -10,6 +10,8 @@ from ctypes import CDLL as _CDLL
 
 
 
+os.environ["OMP_NUM_THREADS"] = "2"
+
 def _locate_file(module: str, name: str) -> _Path:
     """
     Locate a file within a module and return the correct absolute path to

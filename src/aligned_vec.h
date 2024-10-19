@@ -217,9 +217,11 @@ using aligned_vec = std::vector<T, dtl::AlignedAllocator<T, Align>>;
 
 
 
-typedef aligned_vec<doublereal, 16> VECTORD;
-typedef aligned_vec<integer, 16> VECTORI;
+// typedef aligned_vec<doublereal, 16> VECTORD;
+// typedef aligned_vec<integer, 16> VECTORI;
 
+typedef std::vector<doublereal> VECTORD;
+typedef std::vector<integer> VECTORI;
 
 
 } // namespace recombine

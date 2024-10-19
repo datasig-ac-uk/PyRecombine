@@ -4,6 +4,7 @@
 
 #include "reweight.h"
 
+#include <algorithm>
 #include <cassert>
 #include <deque>
 

@@ -76,25 +76,8 @@ if (APPLE)
         message(STATUS "Setting OpenMP search dir to ${_omp_prefix}")
         list(PREPEND CMAKE_PREFIX_PATH "${_omp_prefix}")
 
-        set(_omp_lib "${_omp_prefix}/lib/libomp.dylib")
-        if (NOT EXISTS "${_omp_Lib}")
-            execute_process(COMMAND brew reinstall libomp COMMAND_ECHO STDOUT)
-            if (NOT EXISTS "${_omp_lib}")
-                message(FATAL_ERROR "WTH Apple")
-            endif()
-        endif()
-
         link_directories(${_omp_prefix}/lib)
         include_directories(${_omp_prefix}/include)
-
-        message(STATUS "Found libomp ${_omp_lib}")
-
-#        set(OpenMP_libomp_LIBRARY "${_omp_lib}" CACHE STRING "Location of OpenMP")
-#        foreach(LANG IN ITEMS C CXX)
-#            set(OpenMP_${LANG}_INCLUDE_DIR ${_omp_prefix}/include)
-#            set(OpenMP_${LANG}_LIB_NAMES libomp CACHE INTERNAL "")
-#            set(OpenMP_${LANG}_FLAGS "-Xclang -fopenmp" CACHE STRING "Flags to use to link OpenMP for ${LANG}")
-#        endforeach()
     endif ()
 endif ()
 
@@ -141,6 +124,7 @@ Python_add_library(_PyRecombine MODULE WITH_SOABI
         src/lapack_definitions.h
         src/RdToPowers.cpp
         src/RdToPowers.h
+        src/checked_assign.h
 )
 
 
@@ -178,12 +162,20 @@ if (NOT TARGET MKL::MKL)
     unset(_bla_sizeof_int)
 
     target_link_libraries(_PyRecombine PRIVATE BLAS::BLAS LAPACK::LAPACK)
+    target_compile_definitions(_PyRecomine PRIVATE RECOMBINE_INT_SIZE=${BLA_SIZEOF_INTEGER})
 else ()
-    target_compile_definitions(_PyRecombine PRIVATE MKL=1)
+    if (MKL_INTERFACE STREQUAL ilp64)
+        set(_mkl_int 8)
+    else()
+        set(_mkl_int 4)
+    endif()
+    target_compile_definitions(_PyRecombine PRIVATE RECOMBINE_INT_SIZE=${_mkl_int})
     target_link_libraries(_PyRecombine PRIVATE MKL::MKL)
     if (MSVC)
         target_link_options(_PyRecombine PRIVATE "/nodefaultlib:vcomp")
     endif()
+
+    unset(_mkl_int)
 endif ()
 
 

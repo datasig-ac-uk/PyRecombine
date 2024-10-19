@@ -7,7 +7,6 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <memory>
 #include <vector>
 
 #include "recombine_common.h"
@@ -21,6 +20,9 @@ template <typename I>
 constexpr bool is_power_2(I val) noexcept {
     return (val & (val - 1)) == 0;
 }
+
+void* aligned_alloc(size_t alignment, size_t size);
+void aligned_free(void* ptr, size_t size);
 
 
 // This is partly based on aligned_alloc.h from the original repository,

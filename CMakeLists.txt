@@ -133,6 +133,7 @@ Python_add_library(_PyRecombine MODULE WITH_SOABI
         src/RdToPowers.cpp
         src/RdToPowers.h
         src/checked_assign.h
+        src/aligned_alloc.cpp
 )
 
 

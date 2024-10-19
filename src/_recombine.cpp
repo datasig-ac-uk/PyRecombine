@@ -1,9 +1,12 @@
 // private headers
 #include "_recombine.h"
-#include <recombine/recombine.h>
+#include "recombine_internal.h"
 //#include "TestVec/RdToPowers.h" // CMultiDimensionalBufferHelper
 //#include "TestVec/EvaluateAllMonomials.h" //EvaluateAllMonomials::F
-#include <vector>
+
+
+
+
 
 void _recombineC(size_t stCubatureDegree, ptrdiff_t dimension, ptrdiff_t no_locations, ptrdiff_t* pno_kept_locations,
                  const void** ppLocationBuffer, double* pdWeightBuffer, size_t* KeptLocations, double* NewWeights)
@@ -19,7 +22,7 @@ void _recombineC(size_t stCubatureDegree, ptrdiff_t dimension, ptrdiff_t no_loca
     }
 
     // set up the input structure for conditioning the helper function
-    CMultiDimensionalBufferHelper sConditioning;
+    sCMultiDimensionalBufferHelper sConditioning;
     sConditioning.D = stCubatureDegree;
     sConditioning.L = dimension;
 
@@ -63,7 +66,7 @@ void _recombineC(size_t stCubatureDegree, ptrdiff_t dimension, ptrdiff_t no_loca
     // the array of pointers to points into a long buffer of vectors
     data.degree = iNoDimensionsToCubature;
 
-    data.fn = &RdToPowers;
+    data.expander = &RdToPowers;
 
     {
         // CALL THE LIBRARY THAT DOES THE HEAVYLIFTING
@@ -73,45 +76,3 @@ void _recombineC(size_t stCubatureDegree, ptrdiff_t dimension, ptrdiff_t no_loca
     *pno_kept_locations = data.pOutCloudInfo->No_KeptLocations;
 }
 
-void _recombine(size_t stCubatureDegree, ptrdiff_t dimension, ptrdiff_t no_points,
-                std::vector<const void*> vpLocationBuffer, std::vector<double> vdWeightBuffer,
-                std::vector<size_t>& KeptLocations, std::vector<double>& NewWeights)
-{
-    ptrdiff_t noKeptLocations;
-    // get max buffer size
-    _recombineC(
-        stCubatureDegree
-        , dimension
-        , 0
-        , &noKeptLocations
-        // Python extension code built with distutils is compiled with the same set of compiler options,
-        // regardless of whether it's C or C++. So we can't have -std=c99 and -std-c++11 simultaneously.
-        , nullptr // nullptr
-        , nullptr // nullptr
-        , nullptr // nullptr
-        , nullptr // nullptr
-    );
-
-    // setup a buffer of size iNoDimensionsToCubature to store indexes to the kept points
-    KeptLocations.resize(noKeptLocations);
-
-    // setup a buffer of size iNoDimensionsToCubature to store the weights of the kept points
-    NewWeights.resize(noKeptLocations);
-
-    // set up the number of active input points
-    ptrdiff_t noLocations = (vpLocationBuffer.size() == vdWeightBuffer.size()) ? vpLocationBuffer.size() : 0;
-
-    _recombineC(
-        stCubatureDegree
-        , dimension
-        , noLocations
-        , &noKeptLocations
-        , &vpLocationBuffer[0]
-        , &vdWeightBuffer[0]
-        , &KeptLocations[0]
-        , &NewWeights[0]
-    );
-    // adjust buffer to actual number returned
-    NewWeights.resize(noKeptLocations);
-    KeptLocations.resize(noKeptLocations);
-}

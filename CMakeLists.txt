@@ -128,6 +128,19 @@ Python_add_library(_PyRecombine MODULE WITH_SOABI
         src/py_recombine.c
         src/_recombine.cpp
         src/_recombine.h
+        src/recombine_common.h
+        src/aligned_vec.h
+        src/recombine_internal.h
+        src/Recombine.cpp
+        src/TreeBufferHelper.h
+        src/LinearAlgebraReductionTool.cpp
+        src/LinearAlgebraReductionTool.h
+        src/SafeInt3.hpp
+        src/reweight.cpp
+        src/reweight.h
+        src/lapack_definitions.h
+        src/RdToPowers.cpp
+        src/RdToPowers.h
 )
 
 
@@ -186,19 +199,6 @@ endif ()
 
 target_link_Libraries(_PyRecombine PRIVATE Python::NumPy OpenMP::OpenMP_CXX Threads::Threads)
 
-set(_rec_src ${CMAKE_CURRENT_LIST_DIR}/recombine/recombine)
-target_sources(_PyRecombine PRIVATE
-        ${_rec_src}/recombine/Compare.cpp
-        ${_rec_src}/recombine/recombine.cpp
-        ${_rec_src}/recombine/LinearAlgebraReductionTool.cpp
-        ${_rec_src}/recombine/LinearAlgebraReductionTool.h
-        ${_rec_src}/recombine/reweight.h
-        ${_rec_src}/recombine/SafeInt3.hpp
-        ${_rec_src}/recombine/TreeBufferHelper.h
-        ${_rec_src}/recombine/TreeBufferHelper.cpp
-        ${_rec_src}/recombine/RdToPowers.h
-        ${_rec_src}/recombine/RdToPowers.cpp
-)
 target_include_directories(_PyRecombine PRIVATE "${_rec_src}" "${_rec_src}/recombine" "${CMAKE_CURRENT_BINARY_DIR}")
 
 generate_export_header(_PyRecombine BASE_NAME RECOMBINE)

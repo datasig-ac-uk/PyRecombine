@@ -20,41 +20,50 @@
 
 using namespace recombine;
 
+using TreePositionMap = std::map<size_t, size_t>;
+using CurrentRootsMap = std::map<integer, ptrdiff_t>;
+
+using PointType = std::valarray<doublereal>;
+using PointsBuffer = std::vector<PointType>;
+
+
 namespace internal {
 
-static void ForestOfWeightedVectorsFromWeightedLeafVectors(const CTreeBufferHelper& bhBufInfo,
-                                                    aligned_vec<doublereal>& vdWeightsBuffer,
-                                                    std::vector<std::valarray<doublereal>>& vdPointsBuffer);
 
-static void RepackPointBuffer(std::map<ptrdiff_t, ptrdiff_t>& currentroots,
-                       std::map<size_t, size_t>& miTreePosition,
-                       aligned_vec<doublereal>& weights,
-                       aligned_vec<doublereal>& points,
-                       size_t pointdimension);
+void ForestOfWeightedVectorsFromWeightedLeafVectors(const CTreeBufferHelper& bhBufInfo,
+                                                    VECTORD& vdWeightsBuffer,
+                                                    PointsBuffer& vdPointsBuffer);
 
-static size_t IdentifyLocationsRemainingAndTheirNewWeights(
-        size_t Degree,
-        CTreeBufferHelper& bhBufInfo,
-        std::map<size_t, size_t>& miTreePosition,
-        aligned_vec<doublereal>& vdWeightsBuffer,
-        std::vector<std::valarray<doublereal>>& vdPointsBuffer,
-        aligned_vec<doublereal>& weights,
-        size_t& ICountCalls);
+void RepackPointBuffer(CurrentRootsMap &currentroots, TreePositionMap &miTreePosition,
+                       VECTORD &weights, VECTORD &points, size_t pointdimension);
 
-static size_t InsertLeafData(sRecombineInterface& data, std::valarray<doublereal>& vdArrayPointsBuffer,
-                             aligned_vec<doublereal>& vdWeightsBuffer);
+size_t IdentifyLocationsRemainingAndTheirNewWeights(size_t Degree, CTreeBufferHelper &bhBufInfo,
+                                                    TreePositionMap &miTreePosition,
+                                                    VECTORD &vdWeightsBuffer,
+                                                    PointsBuffer &vdPointsBuffer,
+                                                    VECTORD &weights, size_t &ICountCalls);
+
+size_t InsertLeafData(sRecombineInterface& data, PointType& vdArrayPointsBuffer,
+                             VECTORD& vdWeightsBuffer);
+
+
 
 }
 
 
+
+
+
+
 void Recombine(RecombineInterface pInterface) {
+  // unpack the void pointer
     sRecombineInterface& data = *pInterface;
 
     // expand and insert incoming leaf data into buffers
-    std::valarray<doublereal> vdFlatPointsBuffer;
+    PointType vdFlatPointsBuffer;
     // InsertLeafData assigns memory: 2 * NPointsIn * data.degree
     // make this a memory mapped file
-    aligned_vec<doublereal> vdWeightsBuffer;
+    VECTORD vdWeightsBuffer;
     //
     size_t NPointsIn = internal::InsertLeafData(data, vdFlatPointsBuffer, vdWeightsBuffer);
     //
@@ -97,9 +106,9 @@ void Recombine(RecombineInterface pInterface) {
 
         // BAD UNNECCESARY COPY AND MEMORY USE HERE but tricky to remove
         // map buffer to array of val arrays for compatibility reasons
-        std::vector<std::valarray<doublereal>>
+       PointsBuffer
                 vdPointsBuffer(
-                        bhBufInfo.end(), std::valarray<doublereal>(std::nan("value not yet assigned"), Degree));
+                        bhBufInfo.end(), PointType(std::nan("value not yet assigned"), Degree));
         // populate the leaves
 
         for (size_t i = 0; i < bhBufInfo.iInitialNoLeaves; i++) {
@@ -112,8 +121,8 @@ void Recombine(RecombineInterface pInterface) {
                                                                     vdWeightsBuffer,
                                                                     vdPointsBuffer);
         size_t ICountCalls;
-        std::map<size_t, size_t> miTreePosition;
-        aligned_vec<doublereal> weights;
+        TreePositionMap miTreePosition;
+        VECTORD weights;
         //SHOW(NPointsIn);
         ICountCalls = internal::IdentifyLocationsRemainingAndTheirNewWeights(
                 Degree,
@@ -127,10 +136,10 @@ void Recombine(RecombineInterface pInterface) {
         size_t* pl = LocationsKept;
         NLocationsKept = miTreePosition.size();//not weights.size();
 
-        for (auto it = miTreePosition.begin(); it != miTreePosition.end(); ++it) {
+        for (auto & it : miTreePosition) {
             assert(bhBufInfo.isleaf(it->first));
-            *(pw++) = weights[it->second];
-            *(pl++) = it->first;
+            *(pw++) = weights[it.second];
+            *(pl++) = it.first;
         }
         //(size_t iIndex = 0; bhBufInfo.isleaf(iIndex); iIndex++)
     }
@@ -141,8 +150,8 @@ void Recombine(RecombineInterface pInterface) {
 
 
 void internal::ForestOfWeightedVectorsFromWeightedLeafVectors(const CTreeBufferHelper& bhBufInfo,
-                                                    aligned_vec<doublereal>& vdWeightsBuffer,
-                                                    std::vector<std::valarray<doublereal>>& vdPointsBuffer)
+                                                    VECTORD& vdWeightsBuffer,
+                                                    PointsBuffer& vdPointsBuffer)
 {
     // create correct initial length and allocate memory for recipient valarrays
     // since slice cannot deduce it
@@ -150,14 +159,17 @@ void internal::ForestOfWeightedVectorsFromWeightedLeafVectors(const CTreeBufferH
     //// optimise the OMP so it is faster than the non omp!!
 #if 1
     {
-        for (size_t iIndex = bhBufInfo.iInitialNoLeaves; iIndex < bhBufInfo.end(); iIndex++) {
-            size_t uiLeftParent = bhBufInfo.left(iIndex);
-            size_t uiRightParent = bhBufInfo.right(iIndex);
-            doublereal left = vdWeightsBuffer[uiLeftParent];
-            doublereal right = vdWeightsBuffer[uiRightParent];
-            doublereal sum = left + right;
+        for (auto iIndex = bhBufInfo.iInitialNoLeaves; iIndex < bhBufInfo.end(); iIndex++) {
+            auto uiLeftParent = bhBufInfo.left(iIndex);
+            auto uiRightParent = bhBufInfo.right(iIndex);
+
+            auto left = vdWeightsBuffer[uiLeftParent];
+            auto right = vdWeightsBuffer[uiRightParent];
+
+            auto sum = left + right;
             vdWeightsBuffer[iIndex] = sum;
-            std::valarray<doublereal>& dPointsBuffer = vdPointsBuffer[iIndex];
+
+            auto& dPointsBuffer = vdPointsBuffer[iIndex];
             if (left <= right)
                 dPointsBuffer = vdPointsBuffer[uiLeftParent] * (left / sum) + vdPointsBuffer[uiRightParent] * (1 - (left / sum));
             else
@@ -169,10 +181,10 @@ void internal::ForestOfWeightedVectorsFromWeightedLeafVectors(const CTreeBufferH
         const size_t sz = vdPointsBuffer[0].size(), blocksz(64);
         //#pragma omp parallel for
         for (size_t i = 0; i < sz; i += blocksz)
-            for (size_t iIndex = bhBufInfo.iInitialNoLeaves; iIndex < bhBufInfo.end(); iIndex++) {
+            for (index_integer iIndex = bhBufInfo.iInitialNoLeaves; iIndex < bhBufInfo.end(); iIndex++) {
                 std::slice identity(i, std::min(sz, i + blocksz) - i, 1);
-                size_t uiLeftParent = bhBufInfo.left(iIndex);
-                size_t uiRightParent = bhBufInfo.right(iIndex);
+                index_integer uiLeftParent = bhBufInfo.left(iIndex);
+                index_integer uiRightParent = bhBufInfo.right(iIndex);
                 doublereal left = vdWeightsBuffer[uiLeftParent];
                 doublereal right = vdWeightsBuffer[uiRightParent];
                 doublereal sum = left + right;
@@ -188,22 +200,23 @@ void internal::ForestOfWeightedVectorsFromWeightedLeafVectors(const CTreeBufferH
 #endif
 }
 
-void internal::RepackPointBuffer(std::map<ptrdiff_t, ptrdiff_t>& currentroots,
-                       std::map<size_t, size_t>& miTreePosition, aligned_vec<doublereal>& weights, aligned_vec<doublereal>& points,
+void internal::RepackPointBuffer(CurrentRootsMap& currentroots,
+                       TreePositionMap& miTreePosition, VECTORD& weights, VECTORD& points,
                        size_t pointdimension)
 {
-    std::map<ptrdiff_t, ptrdiff_t> currentrootsnew;
-    std::map<size_t, size_t> miTreePositionNew;
-    aligned_vec<doublereal> weightsnew(currentroots.size());
-    aligned_vec<doublereal> pointsnew(currentroots.size() * pointdimension);
+    CurrentRootsMap currentrootsnew;
+    TreePositionMap miTreePositionNew;
+    VECTORD weightsnew(currentroots.size());
+    VECTORD pointsnew(currentroots.size() * pointdimension);
 
-    ptrdiff_t i = 0;
+    integer i = 0;
     auto itcurrrts = currentroots.begin();
     for (; itcurrrts != currentroots.end(); ++i, ++itcurrrts) {
         miTreePositionNew[itcurrrts->second] = i;
         currentrootsnew[i] = itcurrrts->second;
         weightsnew[i] = weights[itcurrrts->first];
-        for (size_t iM = 0; iM < pointdimension; iM++)
+
+        for (index_integer iM = 0; iM < pointdimension; iM++)
             pointsnew[i * pointdimension + iM] = points[itcurrrts->first * pointdimension + iM];
     }
     points.swap(pointsnew);
@@ -212,41 +225,40 @@ void internal::RepackPointBuffer(std::map<ptrdiff_t, ptrdiff_t>& currentroots,
     miTreePosition.swap(miTreePositionNew);
 }
 
-size_t internal::IdentifyLocationsRemainingAndTheirNewWeights(
-        size_t Degree,
-        CTreeBufferHelper& bhBufInfo,
-        std::map<size_t, size_t>& miTreePosition,
-        aligned_vec<doublereal>& vdWeightsBuffer,
-        std::vector<std::valarray<doublereal>>& vdPointsBuffer,
-        aligned_vec<doublereal>& weights,
-        size_t& ICountCalls)
-{
-    /////////////////////////////////////////////////
+size_t internal::IdentifyLocationsRemainingAndTheirNewWeights(size_t Degree, CTreeBufferHelper &bhBufInfo,
+                                                              TreePositionMap &miTreePosition,
+                                                              VECTORD &vdWeightsBuffer,
+                                                              PointsBuffer &vdPointsBuffer,
+                                                              VECTORD &weights, size_t &ICountCalls) {
+     /////////////////////////////////////////////////
     //SHOW(vdWeightsBuffer.size());
     //SHOW(vdPointsBuffer.size());
 
     weights.clear();
     weights.resize(bhBufInfo.iNoTrees);
     // create local buffers
-    aligned_vec<doublereal> points(bhBufInfo.iNoTrees * Degree);
-    std::map<ptrdiff_t, ptrdiff_t> currentroots;// (bhBufInfo.iNoTrees);
-    aligned_vec<ptrdiff_t> maxset;
+    VECTORD points(bhBufInfo.iNoTrees * Degree);
+    CurrentRootsMap currentroots;// (bhBufInfo.iNoTrees);
+    VECTORI maxset;
 
     bool SomeLinearAlgebraToDo = true;// (bhBufInfo.end() >= bhBufInfo.iNoTrees);
     //assert(SomeLinearAlgebraToDo);
 
-    for (size_t iTreeIndexInFixedBuffer = 0;
+    for (integer iTreeIndexInFixedBuffer = 0;
          iTreeIndexInFixedBuffer < bhBufInfo.iNoTrees;
          iTreeIndexInFixedBuffer++) {
-        ptrdiff_t currentroot = currentroots[iTreeIndexInFixedBuffer] = iTreeIndexInFixedBuffer + bhBufInfo.end() - bhBufInfo.iNoTrees;
-        miTreePosition[(size_t)currentroot] = iTreeIndexInFixedBuffer;
+        auto currentroot = currentroots[iTreeIndexInFixedBuffer] = iTreeIndexInFixedBuffer + bhBufInfo.end() - bhBufInfo.iNoTrees;
+        miTreePosition[(index_integer)currentroot] = iTreeIndexInFixedBuffer;
         weights[iTreeIndexInFixedBuffer] = vdWeightsBuffer[currentroot];
-        for (size_t iM = 0; iM < Degree; iM++)
+
+        for (index_integer iM = 0; iM < Degree; iM++)
             points[iTreeIndexInFixedBuffer * Degree + iM] = (vdPointsBuffer[currentroot])[iM];
     }
 
     //SHOW(miTreePosition.size());
     //SHOW(weights.size());
+
+    integer tosplitposition, togoposition;
 
     recombine::LinearAlgebraReductionTool moLinearAlgebraReductionTool;
     moLinearAlgebraReductionTool.INoCoords(Degree);
@@ -254,20 +266,20 @@ size_t internal::IdentifyLocationsRemainingAndTheirNewWeights(
     while (SomeLinearAlgebraToDo) {
 
         moLinearAlgebraReductionTool.INoPoints(weights.size());
-        //moLinearAlgebraReductionTool.INoPoints((ptrdiff_t)bhBufInfo.iNoTrees);
+        //moLinearAlgebraReductionTool.INoPoints((integer)bhBufInfo.iNoTrees);
         moLinearAlgebraReductionTool.MoveMass(weights, points, maxset);
 
         if (maxset.empty()) SomeLinearAlgebraToDo = false;
         while (maxset.size()) {
-            size_t togoposition(maxset.back());
+            checked_assign(togoposition, maxset.back());
             maxset.pop_back();
             miTreePosition.erase(currentroots[togoposition]);
             currentroots.erase(togoposition);
             // if there is at least one non-trivial tree split the last
             // (and so deepest) one to fill vacant slot
-            size_t tosplit(miTreePosition.rbegin()->first);
+            index_integer tosplit(miTreePosition.rbegin()->first);
             if (!bhBufInfo.isleaf(tosplit)) {
-                size_t tosplitposition = miTreePosition[tosplit];
+                checked_assign(tosplitposition, miTreePosition[tosplit]);
                 miTreePosition.erase(tosplit);
                 currentroots.erase(tosplitposition);
 
@@ -280,7 +292,7 @@ size_t internal::IdentifyLocationsRemainingAndTheirNewWeights(
                 miTreePosition[bhBufInfo.right(tosplit)] = tosplitposition;
                 weights[tosplitposition] *= vdWeightsBuffer[bhBufInfo.right(tosplit)] / vdWeightsBuffer[tosplit];
 
-                for (size_t iM = 0; iM < Degree; iM++) {
+                for (index_integer iM = 0; iM < Degree; iM++) {
                     points[togoposition * Degree + iM] = (vdPointsBuffer[bhBufInfo.left(tosplit)])[iM];
                     points[tosplitposition * Degree + iM] = (vdPointsBuffer[bhBufInfo.right(tosplit)])[iM];
                 }
@@ -295,17 +307,17 @@ size_t internal::IdentifyLocationsRemainingAndTheirNewWeights(
     return ICountCalls;
 }
 
-size_t internal::InsertLeafData(sRecombineInterface& data, std::valarray<doublereal>& vdArrayPointsBuffer,
-                             aligned_vec<doublereal>& vdWeightsBuffer)
+size_t internal::InsertLeafData(sRecombineInterface &data, PointType &vdArrayPointsBuffer,
+                                       VECTORD &vdWeightsBuffer)
 {
     void*& LocationBufIn = (data.pInCloud)->LocationBuf;
-    size_t NPointsIn = (data.pInCloud)->NoActiveWeightsLocations;
+    index_integer NPointsIn = (data.pInCloud)->NoActiveWeightsLocations;
     vdArrayPointsBuffer.resize(2 * NPointsIn * data.degree, std::nan("a non number"));
     vdWeightsBuffer.resize(2 * NPointsIn, std::nan("a non number"));
 
     // Buffers large enough for any encompassing tree + 1 unused
 
-    auto PointsToVectorDoubles = &(*data.expander);
+    auto PointsToVectorDoubles = data.expander;
     sCConditionedBufferHelper arg3;
     arg3.NoPointsToBeProcessed = NPointsIn;
     arg3.SmallestReducibleSetSize = data.degree + 1;//legacy reasons

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <vector>
 #include <valarray>
 
@@ -14,10 +15,12 @@ using namespace recombine;
 
 static constexpr ProductType prodmethod = ProductType::Prods_cheb;
 
+typedef doublereal SCA;
+typedef SCA* PSCA;
 
-namespace {
-
-    // the number of commutative monomials of degree D in L letters //Product[(j + D)/j, {j, 1, L - 1}]
+namespace
+{
+	// the number of commutative monomials of degree D in L letters //Product[(j + D)/j, {j, 1, L - 1}]
 	size_t f(const size_t L, const size_t D)
 	{
 		size_t ans;
@@ -74,7 +77,7 @@ namespace {
 	template<size_t L> // the dimension of a point
 	struct prods2
 	{
-		inline void static prods(doublereal*& now, doublereal val, size_t k, const size_t D, const doublereal* ptv)
+		inline void static prods(PSCA& now, SCA val, size_t k, const size_t D, const SCA* ptv)
 		{
 			//std::cout << "\nEntering prods2 at level " << L << "\n";
 			for ( ; k <= D ; ++k, val *= *ptv)
@@ -85,7 +88,7 @@ namespace {
 	template<>
 	struct prods2<1>
 	{
-		inline void static prods(doublereal*& now, doublereal val, size_t k, const size_t D, const doublereal* ptv )
+		inline void static prods(PSCA& now, SCA val, size_t k, const size_t D, const SCA* ptv )
 		{
 			//std::cout << "\nEntering prods2 at level " << 1 << "\n";
 			for ( ; k <= D ; ++k, val *= *ptv)
@@ -93,7 +96,7 @@ namespace {
 		}
 	};
 
-	void prods_test(doublereal*& now, doublereal val, size_t k, const size_t D, const doublereal* ptv, const doublereal* end)
+	void prods_test(PSCA& now, SCA val, size_t k, const size_t D, const SCA* ptv, const SCA* end)
 	{
 		if (ptv < end && k < D)
 			for ( ; k <= D ; ((k++ < D) ? val *= *ptv : 0 ))
@@ -103,12 +106,12 @@ namespace {
 	}
 
 	struct data{
-		doublereal v;
+		SCA v;
 		size_t k;
 		inline	friend bool operator < (const data& lhs, const data& rhs) {return rhs.k < lhs.k;}  //reversed
 		inline	data&  operator += (const data& rhs) { v *= rhs.v ; k += rhs.k ; return *this ; }
-		inline  doublereal update(const doublereal x_val) {  ++k ; v *= x_val ; return v ;}
-		inline  doublereal update2(const doublereal x_val) { ++k ; return v * x_val ;}
+		inline  SCA update(const SCA x_val) {  ++k ; v *= x_val ; return v ;}
+		inline  SCA update2(const SCA x_val) { ++k ; return v * x_val ;}
 	};
 
 	// given i1<=...<=ij and the associated product vj if j<D choose ij+1
@@ -117,17 +120,17 @@ namespace {
 	// return after looping - job done
 	//
 	//
-	void prods_wei1(doublereal*& now, doublereal val, size_t k, const size_t D, const doublereal* ptv, const doublereal* end)
+	void prods_wei1(PSCA& now, SCA val, size_t k, const size_t D, const SCA* ptv, const SCA* end)
 	{
 		const size_t L = end - ptv;
 		data default_data;
-		default_data.v = doublereal(1);
+		default_data.v = SCA(1);
 		default_data.k = 0;
 		data max_data;
-		max_data.v = doublereal(1);
+		max_data.v = SCA(1);
 		max_data.k = D;
 
-		*(now++) = doublereal(1);
+		*(now++) = SCA(1);
 		std::vector<data> Z(L, default_data);
 
 		std::vector<data>::iterator Zcurrent, Zb(std::begin(Z)), Ze(Zb + L);
@@ -138,7 +141,7 @@ namespace {
 		}
 	}
 
-	void prods_nonrecursive3(doublereal*& now, doublereal val, size_t k, const size_t D, const doublereal* ptv, const doublereal* end)
+	void prods_nonrecursive3(PSCA& now, SCA val, size_t k, const size_t D, const SCA* ptv, const SCA* end)
 	{
 		const size_t L = end - ptv;
 		// [pvt,end) is a range of values we call the POINT
@@ -167,13 +170,13 @@ namespace {
 
 		//init
 		data default_data;
-		default_data.v = doublereal(1);
+		default_data.v = SCA(1);
 		default_data.k = 0;
 		data max_data;
-		max_data.v = doublereal(1);
+		max_data.v = SCA(1);
 		max_data.k = D;
 
-		*(now++)=doublereal(1);
+		*(now++)=SCA(1);
 		data Z[20];
 		assert(L < 20);
 		std::fill(Z, Z + L, default_data);
@@ -185,7 +188,7 @@ namespace {
 		}
 	}
 
-	void prods_nonrecursive2(doublereal*& now, doublereal val, size_t k, const size_t D, const doublereal* ptv, const doublereal* end)
+	void prods_nonrecursive2(PSCA& now, SCA val, size_t k, const size_t D, const SCA* ptv, const SCA* end)
 	{
 		const size_t L = end - ptv;
 		// [pvt,end) is a range of values we call the POINT
@@ -213,33 +216,33 @@ namespace {
 		// (note there are order/pipelining implications here)
 
 		//init
-		*(now++)=doublereal(1);
+		*(now++)=SCA(1);
 
-		doublereal Y[20];
+		SCA Y[20];
 		size_t N[20];
 		assert(L < 20);
 		std::fill(N, N + L, 0);
-		std::fill(Y, Y + L, doublereal(1));
+		std::fill(Y, Y + L, SCA(1));
 
 		size_t* Ncurrent;
 		while ((Ncurrent = std::upper_bound(N, N + L, D, std::greater<size_t>())) != N + L )
 		{
 			const size_t ofset = (Ncurrent - N);
-			doublereal* const Y2(Y + ofset);
+			SCA* const Y2(Y + ofset);
 			std::fill(N, Ncurrent, ++(*Ncurrent));
 			*(now++) = (*(Y2) *= *(ptv + ofset));
 			std::fill( Y, Y2, *(Y2) );
 		}
 	}
 
-	void prods_nonrecursive(doublereal*& now, doublereal val, size_t k, const size_t D, const doublereal* ptv, const doublereal* end)
+	void prods_nonrecursive(PSCA& now, SCA val, size_t k, const size_t D, const SCA* ptv, const SCA* end)
 	{
 		// [pvt,end) is a range of values we call the POINT
 		// this code aims to produce the list [now,...) of all products of powers of these
 		// elements having total power at most D; we call this range the EVALUATION
 
 		// the empty monomial is always included
-		*(now++)= doublereal(1);
+		*(now++)= SCA(1);
 
 		// as we enumerate these products we associate and maintain state variables
 		// suppose [pvt,end) = x,y,z (or y_p)
@@ -268,8 +271,8 @@ namespace {
 			std::vector <size_t> ks( L, 0); // a monotone integer valued distribution function
 			const std::vector < size_t >::iterator beginkit = ks.begin(), endkit = ks.end();
 
-			std::vector <doublereal> vs( L, doublereal(1)); // the partial products of the monomial back to the root
-			const std::vector < doublereal >::iterator beginvit = vs.begin(), endvit = vs.end();
+			std::vector <SCA> vs( L, SCA(1)); // the partial products of the monomial back to the root
+			const std::vector < SCA >::iterator beginvit = vs.begin(), endvit = vs.end();
 
 			for (size_t offset(0) ; offset != L ;
 				offset = (offset < L)?((*(beginkit + offset))++
@@ -299,10 +302,11 @@ namespace {
 		// increment the last part of that initial monomial and extend value to the full length L
 
 	}
+
 }
 
-
-void recombine::prods(doublereal *&now, doublereal val, size_t k, size_t D, const doublereal *ptv, const doublereal *end) {
+void recombine::prods(PSCA& now, SCA val, size_t k, const size_t D, const SCA* ptv, const SCA* end)
+{
 	switch(prodmethod)
 	{
 
@@ -334,7 +338,7 @@ void recombine::prods(doublereal *&now, doublereal val, size_t k, size_t D, cons
 		// a recursive function
 		// k the current degree of val
 	{
-		doublereal  xval(*ptv), val_o(val), val_oo(xval * val);
+		SCA  xval(*ptv), val_o(val), val_oo(xval * val);
 		for (; k <= D; (((k++) < D) ? (val = 2. * xval * val_o - val_oo, val_oo = val_o, val_o = val) : (0)))
 
 			// val is updated by *= the next value at the end of every loop
@@ -366,71 +370,62 @@ void recombine::prods(doublereal *&now, doublereal val, size_t k, size_t D, cons
 				(*(now++) = val);
 		}
 	}
-
-
-
 }
 
-
-void RdToPowers(void* pIn, doublereal* pOut, void* vpCBufferHelper)
+void RdToPowers(void* pIn, SCA* pOut, void* vpCBufferHelper)
 {
-    auto* pCBufferHelper = static_cast<CBufferHelper>(vpCBufferHelper);
-    const auto no_of_locations = static_cast<ptrdiff_t>(pCBufferHelper->NoPointsToBeProcessed);
-    const auto depth_of_vector = static_cast<ptrdiff_t>(pCBufferHelper->SmallestReducibleSetSize - 1);
+	auto* pCBufferHelper = static_cast<CBufferHelper>(vpCBufferHelper);
+	const size_t no_of_locations = pCBufferHelper->NoPointsToBeProcessed;
+	const size_t depth_of_vector = pCBufferHelper->SmallestReducibleSetSize - 1;
 
-    auto* pConditioning = static_cast<sCMultiDimensionalBufferHelper *>(pCBufferHelper->pvCConditioning);
-    const size_t D = pConditioning->D;
-    const size_t L = pConditioning->L;
+	auto* pConditioning = (sCMultiDimensionalBufferHelper*)pCBufferHelper->pvCConditioning;
+	const size_t D = pConditioning->D;
+	const size_t L = pConditioning->L;
 
-    assert (depth_of_vector == F(L,D));
+	assert (depth_of_vector == F(L,D));
 
-    //pIn is a null pointer to an array of null pointers, each of which points to sequences of L doublereals
-    //void** pVoidIn = (void**)pIn; // a pointer to the first element of an array of null pointers
+	//pIn is a null pointer to an array of null pointers, each of which points to sequences of L SCAs
+	//void** pVoidIn = (void**)pIn; // a pointer to the first element of an array of null pointers
 
-    std::vector<doublereal> MAX(L, 0.), MIN(L, 0.), rescaled(L, 0.);
-    std::valarray<doublereal> buffer(0., L * no_of_locations);
+	std::vector<SCA> MAX(L, 0.), MIN(L, 0.), rescaled(L, 0.);
+	std::valarray<SCA> buffer(0., L * no_of_locations);
+	size_t j(0);
 
-    {
-        size_t j(0);
-        for ( void** pVoidIn = (void**)pIn; pVoidIn < (void**)pIn + no_of_locations; ++pVoidIn)
-        {
-            auto* pInRecordBegin((doublereal*)(*(pVoidIn)));
-            for (size_t i = 0; i < L; ++i,++j)
-            {
-                MAX[i] = std::max(pInRecordBegin[i], MAX[i]);
-                MIN[i] = std::min(pInRecordBegin[i], MIN[i]);
-                buffer[j] = pInRecordBegin[i];
-            }
-        }
-    }
-    doublereal* pOutBegin(pOut);
+	for ( void** pVoidIn = (void**)pIn; pVoidIn < (void**)pIn + no_of_locations; ++pVoidIn)
+	{
+		SCA* pInRecordBegin((SCA*)(*(pVoidIn)));
+		for (size_t i = 0; i < L; ++i,++j)
+		{
+			MAX[i] = std::max(pInRecordBegin[i], MAX[i]);
+			MIN[i] = std::min(pInRecordBegin[i], MIN[i]);
+			buffer[j] = pInRecordBegin[i];
+		}
+	}
+	SCA* pOutBegin(pOut);
 
 #pragma omp parallel for
-    for (ptrdiff_t j = 0; j < no_of_locations; ++j)
-    {
-        doublereal* now = pOutBegin + j * depth_of_vector;
-        if (D == 1)
-        {
-            now[0] = 1.;
-            ++now;
-            doublereal* _buffer = &buffer[L*j];
-
+	for (ptrdiff_t j = 0; j < ptrdiff_t(no_of_locations); ++j)
+	{
+		SCA* now = pOutBegin + j * depth_of_vector;
+      if (D == 1)
+      {
+         now[0] = 1.;
+         ++now;
+         SCA* _buffer = &buffer[L*j];
 #pragma omp simd
-            for (size_t i = 0; i < L; ++i)
-                now[i] = ((MAX[i] - MIN[i]) == 0.) ? 0. : (2 * _buffer[i] - (MIN[i] + MAX[i])) / (MAX[i] - MIN[i]);
-        }
-        else
-        {
-            doublereal* _buffer = &buffer[L * j];
-
+         for (size_t i = 0; i < L; ++i)
+            now[i] = ((MAX[i] - MIN[i]) == 0.) ? 0. : (2 * _buffer[i] - (MIN[i] + MAX[i])) / (MAX[i] - MIN[i]);
+      }
+      else
+      {
+         SCA* _buffer = &buffer[L * j];
 #pragma omp simd
-            for (size_t i = 0; i < L; ++i)
-                _buffer[i] = ((MAX[i] - MIN[i]) == 0.) ? 0. : (2 * _buffer[i] - (MIN[i] + MAX[i])) / (MAX[i] - MIN[i]);
-            prods(now, doublereal(1), 0, D, _buffer, _buffer + L);
-        }
-    }
-
-    pOutBegin += no_of_locations * depth_of_vector;
+         for (size_t i = 0; i < L; ++i)
+            _buffer[i] = ((MAX[i] - MIN[i]) == 0.) ? 0. : (2 * _buffer[i] - (MIN[i] + MAX[i])) / (MAX[i] - MIN[i]);
+         prods(now, SCA(1), 0, D, _buffer, _buffer + L);
+      }
+	}
+	pOutBegin += no_of_locations * depth_of_vector;
 }
 
 

@@ -6,9 +6,7 @@
 
 
 #include <cstdlib>
-#ifdef WIN32
-#include <malloc.h">
-#endif
+
 
 
 void *recombine::dtl::aligned_alloc(size_t alignment, size_t size) {

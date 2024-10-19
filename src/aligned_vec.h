@@ -211,8 +211,15 @@ constexpr bool operator!=(const AlignedAllocator<Sy, SAlign>&, const AlignedAllo
 }
 
 
-template<typename T>
-using aligned_vec = std::vector<T, dtl::AlignedAllocator<T, 16>>;
+template<typename T, size_t Align=alignof(T)>
+using aligned_vec = std::vector<T, dtl::AlignedAllocator<T, Align>>;
+
+
+
+typedef aligned_vec<doublereal, 16> VECTORD;
+typedef aligned_vec<integer, 16> VECTORI;
+
+
 
 } // namespace recombine
 

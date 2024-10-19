@@ -69,7 +69,7 @@ public:
     }
 
     pointer allocate(size_type n, const void* hint=nullptr) {
-        void* ptr =  std::aligned_alloc(alignment, n * sizeof(Ty));
+        void* ptr =  aligned_alloc(alignment, n * sizeof(Ty));
         if (ptr == nullptr) {
             throw std::bad_alloc();
         }
@@ -77,8 +77,7 @@ public:
     }
 
     void deallocate(pointer p, size_type N) {
-        (void) N;
-        std::free(p);
+        aligned_free(reinterpret_cast<void*>(p), N);
     }
 
     template <typename Oy, typename... Args>

@@ -162,7 +162,7 @@ if (NOT TARGET MKL::MKL)
     unset(_bla_sizeof_int)
 
     target_link_libraries(_PyRecombine PRIVATE BLAS::BLAS LAPACK::LAPACK)
-    target_compile_definitions(_PyRecomine PRIVATE RECOMBINE_INT_SIZE=${BLA_SIZEOF_INTEGER})
+    target_compile_definitions(_PyRecombine PRIVATE RECOMBINE_INT_SIZE=${BLA_SIZEOF_INTEGER})
 else ()
     if (MKL_INTERFACE STREQUAL ilp64)
         set(_mkl_int 8)

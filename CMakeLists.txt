@@ -147,7 +147,7 @@ if (NOT TARGET MKL::MKL)
     elseif (APPLE)
         set(_bla_static ON)
         set(_bla_vendor Apple)
-        set(_bla_sizeof_int 8) # Accelerate doesn't support 64-bit indexing
+        set(_bla_sizeof_int 4) # Accelerate doesn't support 64-bit indexing
     else ()
         set(_bla_sizeof_int 8)
         set(_bla_static ON)

@@ -9,11 +9,9 @@
 
 namespace recombine {
 
-using integer = ptrdiff_t;
-using doublereal = double;
 
-using index_iterator = typename aligned_vec<integer>::iterator;
-using data_iterator = typename aligned_vec<doublereal>::iterator;
+using index_iterator = typename VECTORI::iterator;
+using data_iterator = typename VECTORD::iterator;
 
 void reweight(
         index_iterator rIDXb,//->an index of length rP for the rows in P and K

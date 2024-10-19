@@ -154,6 +154,7 @@ void recombine::reweight(index_iterator rIDXb, index_iterator cIDXb, data_iterat
                     *pfirst += (factor * (*kfirst));
                 assert(*pfirst >= 0);
             }
+
             updateKincrementO(r);
             // TODO: THERE IS A PROBLEM IN THIS LOOP I THINK
             // IS IT EVALUATED and is oPb defined

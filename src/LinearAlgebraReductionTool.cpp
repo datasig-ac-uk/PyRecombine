@@ -141,7 +141,7 @@ void LinearAlgebraReductionTool::SharpenWeights(VECTORI &minset, VECTORI &maxset
 #ifndef RECOMBINE_NO_DGELSD
         viWork.resize(1);
         viWork[0] = 1;
-        integer RANK;
+        integer RANK = 0;
         LWORK = -1;
         doublereal RCOND(0.);
         std::vector<doublereal> S(N);
@@ -224,7 +224,7 @@ void LinearAlgebraReductionTool::find_kernel(VECTORD A, integer rowsA, integer l
     integer ldvt(columnsA);
     VECTORD vt(ldvt * columnsA);
     integer lwork(-1);
-    integer info;
+    integer info = 0;
     vdWork.resize(1);
     vdWork[0] = 1.;
 
@@ -251,6 +251,7 @@ void LinearAlgebraReductionTool::find_kernel(VECTORD A, integer rowsA, integer l
         std::cout << vdWork[0] << '\n';
         vdWork.resize(lwork = (integer)vdWork[0]);
     }
+    std::cout << "Running the real work\n";
     DGESVD((char*)"N",
            (char*)"A",
            &rowsA,

@@ -1,0 +1,23 @@
+# ninja log v6
+3	398	1729371987101155127	CMakeFiles/_PyRecombine.dir/src/py_recombine.c.o	2538413f695d7960
+2	770	1729374529722640424	build.ninja	4f56e5e08bc5db52
+3	72	1729372335322965460	CMakeFiles/_PyRecombine.dir/src/_recombine.cpp.o	1c0dbb3d1cdcadda
+1802	2330	1729372337121959314	/home/sam/CLionProjects/PyRecombine/src/pyrecombine/_recombine.cpython-312-x86_64-linux-gnu.so	1a29035732386719
+5	255	1729332688926369627	CMakeFiles/_PyRecombine.dir/src/TreeBufferHelper.cpp.o	af69170eb8b9bdc9
+6	1306	1729372335325965450	CMakeFiles/_PyRecombine.dir/src/RdToPowers.cpp.o	53ee952d3c1330c0
+4	1231	1729372335323965456	CMakeFiles/_PyRecombine.dir/src/reweight.cpp.o	d96b459c317bf44c
+4	1802	1729372335323965456	CMakeFiles/_PyRecombine.dir/src/Recombine.cpp.o	c5c4163b0462d99a
+4	1206	1729372335323965456	CMakeFiles/_PyRecombine.dir/src/LinearAlgebraReductionTool.cpp.o	276604ae6f299fd5
+3	56	1729375091084028827	CMakeFiles/_PyRecombine.dir/src/_recombine.cpp.o	1c0dbb3d1cdcadda
+4	450	1729375091085028824	CMakeFiles/_PyRecombine.dir/src/aligned_alloc.cpp.o	9bf59342722b357d
+4	944	1729375091085028824	CMakeFiles/_PyRecombine.dir/src/reweight.cpp.o	d96b459c317bf44c
+4	990	1729375091085028824	CMakeFiles/_PyRecombine.dir/src/RdToPowers.cpp.o	53ee952d3c1330c0
+3	999	1729375091085028824	CMakeFiles/_PyRecombine.dir/src/LinearAlgebraReductionTool.cpp.o	276604ae6f299fd5
+3	1823	1729375091084028827	CMakeFiles/_PyRecombine.dir/src/Recombine.cpp.o	c5c4163b0462d99a
+1823	2349	1729375092904023421	/home/sam/CLionProjects/PyRecombine/src/pyrecombine/_recombine.cpython-312-x86_64-linux-gnu.so	b1e5df77f1a39d4
+4	472	1729376909327614694	CMakeFiles/_PyRecombine.dir/src/aligned_alloc.cpp.o	9bf59342722b357d
+3	1102	1729376909326614697	CMakeFiles/_PyRecombine.dir/src/LinearAlgebraReductionTool.cpp.o	276604ae6f299fd5
+3	1113	1729376909326614697	CMakeFiles/_PyRecombine.dir/src/reweight.cpp.o	d96b459c317bf44c
+4	1491	1729376909327614694	CMakeFiles/_PyRecombine.dir/src/RdToPowers.cpp.o	53ee952d3c1330c0
+3	2058	1729376909326614697	CMakeFiles/_PyRecombine.dir/src/Recombine.cpp.o	c5c4163b0462d99a
+2059	2610	1729376911382608356	/home/sam/CLionProjects/PyRecombine/src/pyrecombine/_recombine.cpython-312-x86_64-linux-gnu.so	b1e5df77f1a39d4

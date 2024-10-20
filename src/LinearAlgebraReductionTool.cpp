@@ -170,6 +170,8 @@ void LinearAlgebraReductionTool::SharpenWeights(VECTORI &minset, VECTORI &maxset
             vdWork.resize(LWORK = (integer)vdWork[0]);
             viWork.resize(viWork[0]);
         }
+
+        std::cout << " Running the real work dgelsd\n";
         DGELSD(&M,
                &N,
                &NRHS,
@@ -184,7 +186,7 @@ void LinearAlgebraReductionTool::SharpenWeights(VECTORI &minset, VECTORI &maxset
                &LWORK,
                viWork.data(),
                &INFO);
-
+        std::cout << "done\n;"
         if (INFO < 0 ) {
             std::cout << "bad argument " << INFO <<'\n';
         } else if (INFO > 0) {
@@ -251,7 +253,7 @@ void LinearAlgebraReductionTool::find_kernel(VECTORD A, integer rowsA, integer l
         std::cout << vdWork[0] << '\n';
         vdWork.resize(lwork = (integer)vdWork[0]);
     }
-    std::cout << "Running the real work\n";
+    std::cout << "Running the real work dgesvd\n";
     DGESVD((char*)"N",
            (char*)"A",
            &rowsA,
@@ -266,6 +268,7 @@ void LinearAlgebraReductionTool::find_kernel(VECTORD A, integer rowsA, integer l
            vdWork.data(),
            &lwork,
            &info);
+    std::cout << "Done\n";
         if (info < 0 ) {
             std::cout << "bad argument " << info <<'\n';
         } else if (info > 0) {

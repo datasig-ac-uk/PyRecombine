@@ -18,7 +18,7 @@ namespace dtl {
 
 template <typename I>
 constexpr bool is_power_2(I val) noexcept {
-    return (val & (val - 1)) == 0;
+    return val > 0 && (val & (val - 1)) == 0;
 }
 
 void* aligned_alloc(size_t alignment, size_t size);

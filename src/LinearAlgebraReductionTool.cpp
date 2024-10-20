@@ -248,6 +248,7 @@ void LinearAlgebraReductionTool::find_kernel(VECTORD A, integer rowsA, integer l
         } else if (info > 0) {
             std::cout << "failed to converge " << info <<'\n';
         }
+        std::cout << vdWork[0] << '\n';
         vdWork.resize(lwork = (integer)vdWork[0]);
     }
     DGESVD((char*)"N",

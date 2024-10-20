@@ -184,7 +184,7 @@ else ()
     target_compile_definitions(_PyRecombine PRIVATE RECOMBINE_INT_SIZE=${_mkl_int})
     target_link_libraries(_PyRecombine PRIVATE MKL::MKL)
     if (MSVC)
-        target_link_options(_PyRecombine PRIVATE "/nodefaultlib:vcomp")
+#        target_link_options(_PyRecombine PRIVATE "/nodefaultlib:vcomp")
     endif()
 
     unset(_mkl_int)

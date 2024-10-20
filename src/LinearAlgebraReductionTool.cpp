@@ -186,7 +186,7 @@ void LinearAlgebraReductionTool::SharpenWeights(VECTORI &minset, VECTORI &maxset
                &LWORK,
                viWork.data(),
                &INFO);
-        std::cout << "done\n;"
+        std::cout << "done\n";
         if (INFO < 0 ) {
             std::cout << "bad argument " << INFO <<'\n';
         } else if (INFO > 0) {

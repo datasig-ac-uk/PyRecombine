@@ -69,6 +69,8 @@ jobs:
         uses: pypa/cibuildwheel@v2.21.3
         env:
           MACOSX_DEPLOYMENT_TARGET: ${{ matrix.deployment_target }}
+          MKL_VERBOSE: 1
+          MKL_NUM_THREADS: 2
 
 
 

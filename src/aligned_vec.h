@@ -216,13 +216,13 @@ template<typename T, size_t Align=alignof(T)>
 using aligned_vec = std::vector<T, dtl::AlignedAllocator<T, Align>>;
 
 
-
-// typedef aligned_vec<doublereal, 16> VECTORD;
-// typedef aligned_vec<integer, 16> VECTORI;
-
+#ifdef WIN32
+typedef aligned_vec<doublereal, 32> VECTORD;
+typedef aligned_vec<integer, 32> VECTORI;
+#else
 typedef std::vector<doublereal> VECTORD;
 typedef std::vector<integer> VECTORI;
-
+#endif
 
 } // namespace recombine
 

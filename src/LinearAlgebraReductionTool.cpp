@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 
 #include "aligned_vec.h"
 #include "reweight.h"
@@ -160,6 +161,12 @@ void LinearAlgebraReductionTool::SharpenWeights(VECTORI &minset, VECTORI &maxset
                    &LWORK,
                    viWork.data(),
                    &INFO);
+
+        if (INFO < 0 ) {
+            std::cout << "bad argument " << INFO <<'\n';
+        } else if (INFO > 0) {
+            std::cout << "failed to converge " << INFO <<'\n';
+        }
             vdWork.resize(LWORK = (integer)vdWork[0]);
             viWork.resize(viWork[0]);
         }
@@ -177,6 +184,12 @@ void LinearAlgebraReductionTool::SharpenWeights(VECTORI &minset, VECTORI &maxset
                &LWORK,
                viWork.data(),
                &INFO);
+
+        if (INFO < 0 ) {
+            std::cout << "bad argument " << INFO <<'\n';
+        } else if (INFO > 0) {
+            std::cout << "failed to converge " << INFO <<'\n';
+        }
 #else
         LWORK = -1;
         if (LWORK == -1) {
@@ -230,6 +243,11 @@ void LinearAlgebraReductionTool::find_kernel(VECTORD A, integer rowsA, integer l
                vdWork.data(),
                &lwork,
                &info);
+        if (info < 0 ) {
+            std::cout << "bad argument " << info <<'\n';
+        } else if (info > 0) {
+            std::cout << "failed to converge " << info <<'\n';
+        }
         vdWork.resize(lwork = (integer)vdWork[0]);
     }
     DGESVD((char*)"N",
@@ -246,6 +264,11 @@ void LinearAlgebraReductionTool::find_kernel(VECTORD A, integer rowsA, integer l
            vdWork.data(),
            &lwork,
            &info);
+        if (info < 0 ) {
+            std::cout << "bad argument " << info <<'\n';
+        } else if (info > 0) {
+            std::cout << "failed to converge " << info <<'\n';
+        }
 
     auto noNonzeroEV = std::upper_bound(begin(s), end(s), 10e-12, std::greater<doublereal>()) - begin(s);
     ////SHOW(s);

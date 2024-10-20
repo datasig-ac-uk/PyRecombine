@@ -16,17 +16,14 @@ def no_points():
 def test_recombine_1(dimension, no_points):
     data = np.random.default_rng(12345).random(size=(no_points, dimension), dtype=np.float64)
 
-    print("Runnint recombine")
     ## test 1
     selected_points, new_weights = recombine(data)  ## degree = 1
 
-    print("computing errors")
     ## check mean preserved
     old_average = np.sum(data, 0)
     new_average = new_weights.dot(np.take(data, selected_points, 0))
     normalised_error = norm(old_average - new_average) / (norm(old_average) + norm(new_average))
 
-    print("running asserts")
     ## report
     assert len(selected_points) <= dimension + 1
     assert normalised_error <= 1e-13
@@ -40,16 +37,13 @@ def test_recombine_2(dimension, no_points):
     ### the points are not spanning the full space and so the minimal set should have cardinality less than or equal rank + 1
     matrix = rng.random(size=(dimension, dimension + 20))
     new_data = data.dot(matrix)
-    print("Runnint recombine")
     selected_points, new_weights = recombine(new_data)  ## degree = 1
 
-    print("computing errors")
     ## check mean preserved
     old_average = np.sum(data, 0)
     new_average = new_weights.dot(np.take(data, selected_points, 0))
     normalised_error = norm(old_average - new_average) / (norm(old_average) + norm(new_average))
 
-    print("running asserts")
     ## report
     assert len(selected_points) <= dimension + 1
     assert normalised_error <= 1e-12
@@ -63,10 +57,8 @@ def test_recombine_3():
     no_points = 1000
     data = rng.random(size=(no_points, dimension))
 
-    print("Runnint recombine")
     selected_points, new_weights = recombine(data, degree=2)
 
-    print("computing errors")
     old_average = np.sum(data, 0)
     new_average = new_weights.dot(np.take(data, selected_points, 0))
     normalised_error_in_mean = norm(old_average - new_average) / (norm(old_average) + norm(new_average))
@@ -75,7 +67,5 @@ def test_recombine_3():
     old_cov = np.cov(data, rowvar=False, bias=True, aweights=np.full(1000, 1.))
     normalised_error_in_cov = norm(old_cov - new_cov) / (norm(old_cov) + norm(new_cov))
 
-
-    print("running asserts")
     assert normalised_error_in_mean <= 1e-13
     assert normalised_error_in_cov <= 1e-13

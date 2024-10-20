@@ -11,6 +11,9 @@
 
 #include "recombine_common.h"
 
+
+#define RECOMBINE_ALIGNMENT 64
+
 namespace recombine {
 
 
@@ -21,8 +24,9 @@ constexpr bool is_power_2(I val) noexcept {
     return val > 0 && (val & (val - 1)) == 0;
 }
 
-void* aligned_alloc(size_t alignment, size_t size);
-void aligned_free(void* ptr, size_t size);
+[[nodiscard]]
+void* aligned_alloc(size_t alignment, size_t size) noexcept;
+void aligned_free(void* ptr, size_t size) noexcept;
 
 
 // This is partly based on aligned_alloc.h from the original repository,
@@ -216,9 +220,12 @@ template<typename T, size_t Align=alignof(T)>
 using aligned_vec = std::vector<T, dtl::AlignedAllocator<T, Align>>;
 
 
-#ifdef WIN32
-typedef aligned_vec<doublereal, 32> VECTORD;
-typedef aligned_vec<integer, 32> VECTORI;
+
+
+
+#ifdef RECOMBINE_ALIGNMENT
+typedef aligned_vec<doublereal, RECOMBINE_ALIGNMENT> VECTORD;
+typedef aligned_vec<integer, RECOMBINE_ALIGNMENT> VECTORI;
 #else
 typedef std::vector<doublereal> VECTORD;
 typedef std::vector<integer> VECTORI;

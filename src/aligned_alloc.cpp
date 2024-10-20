@@ -9,7 +9,7 @@
 
 
 
-void *recombine::dtl::aligned_alloc(size_t alignment, size_t size) {
+void *recombine::dtl::aligned_alloc(size_t alignment, size_t size) noexcept {
 #ifdef WIN32
     return _aligned_malloc(size, alignment);
 #elif defined(__linux__) || defined(__APPLE__)
@@ -23,7 +23,7 @@ void *recombine::dtl::aligned_alloc(size_t alignment, size_t size) {
 #endif
 }
 
-void recombine::dtl::aligned_free(void* ptr, size_t size) {
+void recombine::dtl::aligned_free(void* ptr, size_t size) noexcept {
 #ifdef WIN32
     _aligned_free(ptr);
 #elif defined(__linux__) || defined(__APPLE__)

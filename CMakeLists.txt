@@ -107,7 +107,7 @@ print(files[0].parent)
     set(MKL_ARCH intel64)
     set(MKL_THREADING intel_thread)
     if (WIN32)
-#        set(MKL_THREADING sequential)
+        set(MKL_THREADING sequential)
     endif()
     set(MKL_INTERFACE ilp64)
     # If mkl-static is installed, we can use this.

@@ -38,8 +38,8 @@ requires = [
     "scikit-build-core[pyproject]",
     "ninja; platform_system != 'Windows'",
     "numpy >= 2.0.0",
-    "mkl-devel == 2023.2.0; (platform_machine == 'AMD64' or platform_machine == 'x86_64') and sys_platform != 'darwin'",
-    "mkl-static == 2023.2.0; (platform_machine == 'AMD64' or platform_machine == 'x86_64') and sys_platform != 'darwin'"
+    "mkl-devel; (platform_machine == 'AMD64' or platform_machine == 'x86_64') and sys_platform != 'darwin'",
+    "mkl-static; (platform_machine == 'AMD64' or platform_machine == 'x86_64') and sys_platform != 'darwin'"
 ]
 build-backend = "scikit_build_core.build"
 

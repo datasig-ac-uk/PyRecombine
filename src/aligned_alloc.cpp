@@ -29,6 +29,6 @@ void recombine::dtl::aligned_free(void* ptr, size_t size) {
 #elif defined(__linux__) || defined(__APPLE__)
     ::free(ptr);
 #else
-    return ::free(ptr)
+    ::free(ptr)
 #endif
 }

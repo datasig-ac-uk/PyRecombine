@@ -44,145 +44,188 @@ PyDoc_STRVAR(py_recombine_doc,
 
 static PyObject* py_recombine(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    // INTERNAL
-    //
-    int src_locations_built_internally = 0;
-    int src_weights_built_internally = 0;
-    // match the mean - or higher moments
-    size_t stCubatureDegree;
-    // max no points at end - computed below
-    ptrdiff_t NoDimensionsToCubature;
-    // parameter summaries
-    ptrdiff_t no_locations;
-    ptrdiff_t point_dimension;
-    double total_mass = 0.;
     // the final output
     PyObject* out = NULL;
 
+    PyObject* py_data = NULL;
+    PyObject* py_locations = NULL;
+    PyObject* py_weights = NULL;
+
     // THE INPUTS
     // the data - a (large) enumeration of vectors obtained by making a list of vectors and converting it to an array.
-    PyArrayObject* data;
+    PyArrayObject* data = NULL;
     // a list of the rows of interest
     PyArrayObject* src_locations = NULL;
     // their associated weights
     PyArrayObject* src_weights = NULL;
     // match the mean - or higher moments
-    ptrdiff_t CubatureDegree = 1;
+    npy_intp CubatureDegree = 1;
 
     // Pre declaration of variables that are only used in the main branch.
     // The compiler is complaining when variables are declared and initialised
     // between the goto and label exit
     PyArrayObject* snk_locations = NULL;
     PyArrayObject* snk_weights = NULL;
-    double* NewWeights;
-    size_t* LOCATIONS;
-    ptrdiff_t noKeptLocations;
-    size_t* KeptLocations;
 
     // usage def recombine(array1, *args, degree=1)
     static const char* kwlist[] = {"ensemble", "selector", "weights", "degree", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|O!O!n:recombine", (char**)kwlist, &PyArray_Type, &data,
-                                     &PyArray_Type, &src_locations, &PyArray_Type, &src_weights, &CubatureDegree))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OOn:recombine", (char**)kwlist,
+            &py_data, &py_locations, &py_weights, &CubatureDegree)) {
         return out;
+    }
+
     // DATA VALIDATION
-    //
-    if (data == NULL)
-    {
+    if (py_data == NULL) {
+        PyErr_SetString(PyExc_ValueError, "data is required");
         return NULL;
     }
-    else if (PyArray_NDIM(data) != 2 || PyArray_DIM(data, 0) == 0 || PyArray_DIM(data, 1) == 0)
-    {
-        // present but badly formed
-        PyErr_SetString(PyExc_ValueError, "data is badly formed");
-        return NULL;
-    }
-    else if (src_locations != NULL && ((PyArray_NDIM(src_locations) != 1 || PyArray_DIM(src_locations, 0) == 0)))
-    {
-        // present but badly formed
-        PyErr_SetString(PyExc_ValueError, "source locations badly formed");
-        return NULL;
-    }
-    else if (src_weights != NULL && (PyArray_NDIM(src_weights) != 1 || PyArray_DIM(src_weights, 0) == 0))
-    {
-        // present but badly formed
-        PyErr_SetString(PyExc_ValueError, "source weights badly formed");
-        return NULL;
-    }
-    else if ((src_weights != NULL && src_locations != NULL) && !PyArray_SAMESHAPE(src_weights, src_locations))
-    {
-        // present well formed but of different length
-        PyErr_SetString(PyExc_ValueError, "source weights and source locations have different shapes");
-        return NULL;
-    }
-    else if (CubatureDegree < 1)
-    {
+
+    // Get the easy check out of the way early
+    if (CubatureDegree < 1) {
         PyErr_SetString(PyExc_ValueError, "invalid cubature degree");
         return NULL;
     }
-    stCubatureDegree = CubatureDegree; //(convert from signed to unsigned)
-    // create default locations (ALL) if not specified
-    if (src_locations == NULL)
-    {
-        npy_intp* d = PyArray_DIMS(data);
-        //d[0] = PyArray_DIM(data, 0);
-        src_locations = (PyArrayObject*)PyArray_SimpleNew(1, d, NPY_INTP);
-        size_t* LOCS =  (size_t*) PyArray_DATA(src_locations);
-        ptrdiff_t id;
-        for (id = 0; id < d[0]; ++id)
-            LOCS[id] = id;
-        src_locations_built_internally = 1;
-    }
-    // create default weights (1. on each point) if not specified
-    if (src_weights == NULL)
-    {
-        npy_intp d[1];
-        d[0] = PyArray_DIM(src_locations, 0);
-        src_weights = (PyArrayObject*)PyArray_SimpleNew(1, d, NPY_DOUBLE);
-        double* WTS = (double*) PyArray_DATA(src_weights);
-        ptrdiff_t id;
-        for (id = 0; id < d[0]; ++id)
-            WTS[id] = 1.;
-        src_weights_built_internally = 1;
-    }
-    // make all data contiguous and type compliant (This only applies to external data - we know that our created arrays are fine
-    // note this requires a deref at the end - so does the fill in of defaults - but we only do one or the other
-    {
-        data = (PyArrayObject*)PyArray_ContiguousFromObject((PyObject*)data, NPY_DOUBLE, 2, 2);
-        if (!src_locations_built_internally)
-            src_locations = (PyArrayObject*)PyArray_ContiguousFromObject((PyObject*)src_locations, NPY_INTP, 1, 1);
-        if (!src_weights_built_internally)
-            src_weights = (PyArrayObject*)PyArray_ContiguousFromObject((PyObject*)src_weights, NPY_DOUBLE, 1, 1);
+    const size_t stCubatureDegree = CubatureDegree;
+
+
+    // data = (PyArrayObject*) PyArray_FROM_OTF(py_data, NPY_DOUBLE,
+    //     NPY_ARRAY_IN_ARRAY | NPY_ARRAY_ENSUREARRAY);
+    // The input data must be a rank 2 array containing doubles
+    data = (PyArrayObject*) PyArray_FromAny(
+        py_data,
+        PyArray_DescrFromType(NPY_DOUBLE), // desired type
+        2, // min depth
+        2, // max depth
+        NPY_ARRAY_IN_ARRAY | NPY_ARRAY_ENSUREARRAY, // requirements
+        NULL // context - unused
+        );
+
+    if (data == NULL) {
+        // No references incremented if the data is not convertible to an array
+        // and an error is set from the above function.
+        return NULL;
     }
 
+    if (PyArray_DIM(data, 0) == 0 || PyArray_DIM(data, 1) == 0) {
+        PyErr_SetString(PyExc_ValueError, "data is empty");
+        goto exit;
+    }
+
+    npy_intp no_datapoints = PyArray_DIM(data, 0);
+    npy_intp point_dimension = PyArray_DIM(data, 1);
+    npy_intp no_locations = no_datapoints;
+
+
+    if (py_locations != NULL) {
+        // Source locations provided, parse to array and check
+        src_locations = (PyArrayObject*) PyArray_FromAny(
+            py_locations,
+            PyArray_DescrFromType(NPY_INTP), // desired type
+            1,  // min depth
+            1,  // max depth
+            NPY_ARRAY_IN_ARRAY | NPY_ARRAY_ENSUREARRAY, // Requirements
+            NULL // context - unused
+            );
+
+        if (src_locations == NULL) {
+            // Error already set
+            goto exit;
+        }
+
+        if (PyArray_DIM(src_locations, 0) == 0) {
+            PyErr_SetString(PyExc_ValueError, "source locations is provided but empty");
+            goto exit;
+        }
+
+        no_locations = PyArray_DIM(src_locations, 0);
+        if (no_locations > no_datapoints) {
+            PyErr_SetString(PyExc_ValueError, "source locations is provided but too large");
+            goto exit;
+        }
+
+    } else {
+        // If the src_locations array is empty then we should construct it ourselves.
+        src_locations = (PyArrayObject*)PyArray_SimpleNew(1, &no_datapoints, NPY_INTP);
+        npy_intp* LOCS =  (npy_intp*) PyArray_DATA(src_locations);
+
+        for (npy_intp id = 0; id < no_datapoints; ++id) {
+            LOCS[id] = id;
+        }
+
+        // src_locations_built_internally = 1;
+    }
+
+
+    double total_mass = 0.;
+    if (py_weights != NULL) {
+        // source weights provided, parse to array and check
+        src_weights = (PyArrayObject*) PyArray_FromAny(
+            py_weights,
+            PyArray_DescrFromType(NPY_DOUBLE), // desired type
+            1,  // min depth
+            1,  // max depth
+            NPY_ARRAY_ENSURECOPY | NPY_ARRAY_ENSUREARRAY, // Requirements
+            NULL // context - unused
+            );
+
+        if (src_weights == NULL) {
+            // Error already set
+            goto exit;
+        }
+
+        if (PyArray_DIM(src_weights, 0) != no_locations) {
+            PyErr_SetString(PyExc_ValueError,
+                "source weights must match the number of locations");
+            goto exit;
+        }
+
+        double* WTS = (double*) PyArray_DATA(src_weights);
+        for (npy_intp id=0; id < no_locations; ++id) {
+            total_mass += WTS[id];
+        }
+
+    } else {
+        src_weights = (PyArrayObject*)PyArray_SimpleNew(1, &no_locations, NPY_DOUBLE);
+
+        double* WTS = (double*) PyArray_DATA(src_weights);
+        for (npy_intp id = 0; id < no_locations; ++id) {
+            WTS[id] = 1.;
+        }
+        total_mass = (double) no_locations;
+
+        // src_weights_built_internally = 1;
+    }
 
     // PREPARE INPUTS AS C ARRAYS
-    ptrdiff_t no_datapoints = PyArray_DIM(data, 0);
-    point_dimension = PyArray_DIM(data, 1);
+
     double* DATA = (double*) PyArray_DATA(data);
 
-
-    LOCATIONS = (size_t*) PyArray_DATA(src_locations);
+    size_t *LOCATIONS = (size_t *) PyArray_DATA(src_locations);
     double* WEIGHTS = (double*) PyArray_DATA(src_weights);
 
     // map locations from integer indexes to pointers to double
-    no_locations = PyArray_DIM(src_locations, 0);
     double** LOCATIONS2 = (double**)malloc(no_locations * sizeof(double*));
-    ptrdiff_t id;
-    for (id = 0; id < no_locations; ++id)
+
+
+    for (npy_intp id = 0; id < no_locations; ++id)
     {
         // check for data out of range
-        if (LOCATIONS[id] >= no_datapoints)
+        if (LOCATIONS[id] >= no_locations) {
+            PyErr_Format(PyExc_ValueError,
+                "location %z out of range", LOCATIONS[id]);
             goto exit;
+        }
         LOCATIONS2[id] = &DATA[LOCATIONS[id] * point_dimension];
     }
+
     // normalize the weights
-    for (id = 0; id < no_locations; ++id)
-        total_mass += WEIGHTS[id];
-    for (id = 0; id < no_locations; ++id)
+    for (npy_intp id = 0; id < no_locations; ++id) {
         WEIGHTS[id] /= total_mass;
+    }
 
 
     // NoDimensionsToCubature = the max number of points needed for cubature
+    npy_intp NoDimensionsToCubature;
     _recombineC(
         stCubatureDegree
         , point_dimension
@@ -193,13 +236,20 @@ static PyObject* py_recombine(PyObject* self, PyObject* args, PyObject* kwargs)
         , NULL
         , NULL
     );
+
     // Prepare to call the reduction algorithm
-    // a variable that will eventually be amended to to indicate the actual number of points returned
-    noKeptLocations = NoDimensionsToCubature;
+    // a variable that will eventually be amended to indicate the actual number of points returned
+    npy_intp noKeptLocations = NoDimensionsToCubature;
+
     // a buffer of size iNoDimensionsToCubature big enough to store array of indexes to the kept points
-    KeptLocations = (size_t*)malloc(noKeptLocations * sizeof(size_t));
+    // size_t *KeptLocations = (size_t *) malloc(noKeptLocations * sizeof(size_t));
+
     // a buffer of size NoDimensionsToCubature to store the weights of the kept points
-    NewWeights = (double*)malloc(noKeptLocations * sizeof(double));
+    // double* NewWeights = (double*)malloc(noKeptLocations * sizeof(double));
+
+    snk_locations = (PyArrayObject*)PyArray_SimpleNew(1, &noKeptLocations, NPY_INTP);
+    snk_weights = (PyArrayObject*)PyArray_SimpleNew(1, &noKeptLocations, NPY_DOUBLE);
+
 
     _recombineC(
         stCubatureDegree
@@ -208,25 +258,45 @@ static PyObject* py_recombine(PyObject* self, PyObject* args, PyObject* kwargs)
         , &noKeptLocations
         , (const void**)LOCATIONS2
         , WEIGHTS
-        , KeptLocations
-        , NewWeights
+        , (size_t*) PyArray_DATA(snk_locations)
+        , (double*) PyArray_DATA(snk_weights)
     );
-    // un-normalise the weights
-    for (id = 0; id < noKeptLocations; ++id)
-        NewWeights[id] *= total_mass;
-    // MOVE ANSWERS TO OUT
-    // MAKE NEW OUTPUT OBJECTS
-    npy_intp d[1];
-    d[0] = noKeptLocations;
 
-    snk_locations = (PyArrayObject*)PyArray_SimpleNew(1, d, NPY_INTP);
-    snk_weights = (PyArrayObject*)PyArray_SimpleNew(1, d, NPY_DOUBLE);
-    // MOVE OUTPUT FROM BUFFERS TO THESE OBJECTS
-    memcpy(PyArray_DATA(snk_locations), KeptLocations, noKeptLocations * sizeof(size_t));
-    memcpy(PyArray_DATA(snk_weights), NewWeights, noKeptLocations * sizeof(double));
-    // RELEASE BUFFERS
-    free(KeptLocations);
-    free(NewWeights);
+
+
+    // un-normalise the weights
+    double* NewWeights = (double *) PyArray_DATA(snk_weights);
+    for (npy_intp id = 0; id < noKeptLocations; ++id) {
+        NewWeights[id] *= total_mass;
+    }
+
+
+    if (noKeptLocations != NoDimensionsToCubature) {
+        PyArray_Dims dims = {&noKeptLocations, 1};
+        if (PyArray_Resize(snk_locations, &dims, 0, NPY_CORDER) == NULL) {
+            Py_XDECREF(snk_locations);
+            Py_XDECREF(snk_weights);
+
+            PyErr_SetString(PyExc_ValueError, "could not resize output arrays");
+            goto exit;
+        }
+        if (PyArray_Resize(snk_weights, &dims, 0, NPY_CORDER) == NULL) {
+            Py_XDECREF(snk_locations);
+            Py_XDECREF(snk_weights);
+
+            PyErr_SetString(PyExc_ValueError, "could not resize output arrays");
+            goto exit;
+        }
+
+    }
+
+
+    // memcpy(PyArray_DATA(snk_locations), KeptLocations, noKeptLocations * sizeof(size_t));
+    // memcpy(PyArray_DATA(snk_weights), NewWeights, noKeptLocations * sizeof(double));
+
+    // free(KeptLocations);
+    // free(NewWeights);
+
     // CREATE OUTPUT
     out = PyTuple_Pack(2, snk_locations, snk_weights);
 

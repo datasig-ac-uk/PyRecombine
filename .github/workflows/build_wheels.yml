@@ -72,6 +72,7 @@ jobs:
         with:
           pattern: cibw-wheels-*
           path: ./dist
+          merge-multiple: true
 
             # retrieve your distributions here
 
